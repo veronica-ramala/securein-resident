@@ -1,34 +1,43 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, ScrollView } from 'react-native';
+import React, { memo, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { AlertTriangle, Users, Phone, ShieldAlert, Flame, Ambulance, Building, MapPin } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalization } from '../../context/LocalizationContext';
+import { useNavigationPerformance } from '../../hooks/useNavigationPerformance';
 
-export default function ServicesScreen() {
+function ServicesScreen() {
   const router = useRouter();
+  const { t } = useLocalization();
 
-  const navigateToEmergency = () => {
+  // Use performance optimization hook
+  useNavigationPerformance();
+
+  // Memoize navigation callbacks
+  const navigateToEmergency = useCallback(() => {
     router.push('/(tabs)/emergency');
-  };
+  }, [router]);
   
-  const navigateToLocalConnect = () => {
+  const navigateToLocalConnect = useCallback(() => {
     router.push('/(tabs)/local-connect');
-  };
+  }, [router]);
   
-  const callEmergency = (service: string, number: string) => {
-    alert(`Calling ${service} (${number})...`);
-  };
+  const callEmergency = useCallback((service: string, number: string) => {
+    alert(`${t('emergency.calling')} ${service} (${number})...`);
+  }, [t]);
   
-  const emergencyContacts = [
-    { id: 'police', name: 'Police', number: '100', icon: AlertTriangle, color: '#0077B6', bgColor: '#E6F7FF' },
-    { id: 'fire', name: 'Fire', number: '101', icon: Flame, color: '#F97316', bgColor: '#FFF7ED' },
-    { id: 'ambulance', name: 'Ambulance', number: '108', icon: Ambulance, color: '#EF4444', bgColor: '#FEF2F2' },
-    { id: 'security', name: 'Society Security', number: 'Guard', icon: ShieldAlert, color: '#7C3AED', bgColor: '#F5F3FF' },
-  ];
+  // Memoize emergency contacts to prevent recreation on every render
+  const emergencyContacts = useMemo(() => [
+    { id: 'police', name: t('emergency.police'), number: '100', icon: AlertTriangle, color: '#0077B6', bgColor: '#E6F7FF' },
+    { id: 'fire', name: t('emergency.fire'), number: '101', icon: Flame, color: '#F97316', bgColor: '#FFF7ED' },
+    { id: 'ambulance', name: t('emergency.ambulance'), number: '108', icon: Ambulance, color: '#EF4444', bgColor: '#FEF2F2' },
+    { id: 'security', name: t('emergency.societySecurity'), number: t('emergency.guard'), icon: ShieldAlert, color: '#0077B6', bgColor: '#E6F7FF' },
+  ], [t]);
 
   const societyContacts = [
-    { id: 'manager', name: 'Society Manager', number: '+91 98765 43210', icon: Building },
-    { id: 'maintenance', name: 'Maintenance', number: '+91 98765 12345', icon: Building },
+    { id: 'manager', name: t('emergency.societyManager'), number: '+91 98765 43210', icon: Building },
+    { id: 'maintenance', name: t('emergency.maintenance'), number: '+91 98765 12345', icon: Building },
   ];
 
   return (
@@ -41,42 +50,42 @@ export default function ServicesScreen() {
         >
           <View style={styles.headerContent}>
             <View style={styles.titleContainer}>
-              <Text style={styles.headerTitle}>Services</Text>
+              <Text style={styles.headerTitle}>{t('services.title')}</Text>
             </View>
           </View>
         </LinearGradient>
 
         <ScrollView style={styles.scrollView}>
           <View style={styles.content}>
-            <Text style={styles.sectionTitle}>Available Services</Text>
+            <Text style={styles.sectionTitle}>{t('services.availableServices')}</Text>
             <Text style={styles.sectionDescription}>
-              Access essential services and contacts
+              {t('services.accessEssential')}
             </Text>
             
             {/* Services Grid Layout */}
             <View style={styles.servicesGrid}>
               {/* Community Section - Moved to Top */}
-              <Text style={styles.categoryTitle}>Community</Text>
+              <Text style={styles.categoryTitle}>{t('services.communityServices')}</Text>
               <TouchableOpacity 
                 style={styles.featureButton}
                 onPress={navigateToLocalConnect}
                 activeOpacity={0.7}
               >
                 <View style={styles.featureContent}>
-                  <View style={[styles.featureIconContainer, { backgroundColor: '#7C3AED20' }]}>
-                    <Users size={28} color="#7C3AED" />
+                  <View style={[styles.featureIconContainer, { backgroundColor: '#0077B620' }]}>
+                    <Users size={28} color="#0077B6" />
                   </View>
                   <View style={styles.featureTextContainer}>
-                    <Text style={styles.featureTitle}>Local Connect</Text>
+                    <Text style={styles.featureTitle}>{t('services.localConnect')}</Text>
                     <Text style={styles.featureDescription}>
-                      Connect with neighbors and local community members
+                      {t('services.localConnectDesc')}
                     </Text>
                   </View>
                 </View>
               </TouchableOpacity>
               
               {/* Society Contacts - Moved to Second */}
-              <Text style={styles.categoryTitle}>Society Contacts</Text>
+              <Text style={styles.categoryTitle}>{t('emergency.societyContacts')}</Text>
               <View style={styles.gridRow}>
                 {societyContacts.map(contact => (
                   <TouchableOpacity 
@@ -94,7 +103,7 @@ export default function ServicesScreen() {
               </View>
               
               {/* Emergency Contacts Grid - Moved to Bottom */}
-              <Text style={styles.categoryTitle}>Emergency Contacts</Text>
+              <Text style={styles.categoryTitle}>{t('emergency.emergencyContacts')}</Text>
               <View style={styles.gridRow}>
                 {emergencyContacts.slice(0, 2).map(contact => (
                   <TouchableOpacity 
@@ -130,24 +139,22 @@ export default function ServicesScreen() {
             
             {/* Instructions */}
             <View style={styles.instructionsContainer}>
-              <Text style={styles.instructionsTitle}>How to Use</Text>
+              <Text style={styles.instructionsTitle}>{t('services.howToUse')}</Text>
               <Text style={styles.instructionText}>
-                1. Tap on any contact card to call directly
+                {t('services.instruction1')}
               </Text>
               <Text style={styles.instructionText}>
-                2. Use Local Connect to engage with your community
+                {t('services.instruction2')}
               </Text>
               <Text style={styles.instructionText}>
-                3. For emergencies, call the appropriate number immediately
+                {t('services.instruction3')}
               </Text>
             </View>
             
             {/* Note */}
             <View style={styles.noteContainer}>
               <Text style={styles.noteText}>
-                Note: All contacts are available 24/7. For immediate assistance, 
-                please use the appropriate contact above. In case of life-threatening situations, 
-                dial 911 immediately.
+                {t('services.note')}
               </Text>
             </View>
           </View>
@@ -371,3 +378,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   }
 });
+
+export default memo(ServicesScreen);

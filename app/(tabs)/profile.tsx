@@ -1,15 +1,39 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Switch, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Shield, Settings, LogOut, Edit, Bell, User, HelpCircle, Lock } from 'lucide-react-native';
+import { Shield, Settings, LogOut, Edit, Bell, User, HelpCircle, Lock, Globe, Check, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useUserContext } from '../../context/UserContext';
+import { useLocalization } from '../../context/LocalizationContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { profileData, logout } = useUserContext();
+  const { t, currentLanguage, setLanguage, availableLanguages } = useLocalization();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+
+  // Get current language display name
+  const getCurrentLanguageName = () => {
+    const currentLang = availableLanguages.find(lang => lang.code === currentLanguage);
+    return currentLang ? currentLang.name : 'English';
+  };
+
+  const handleLanguageSelect = async (language: any) => {
+    try {
+      await setLanguage(language.code);
+      setLanguageModalVisible(false);
+      Alert.alert(
+        t('profile.languageChanged'),
+        t('profile.languageChangedDesc', { language: language.name }),
+        [{ text: t('common.ok') }]
+      );
+    } catch (error) {
+      console.error('Error changing language:', error);
+      Alert.alert(t('common.error'), 'Failed to change language');
+    }
+  };
   
   // Define renderIcon function to handle icon rendering
   const renderIcon = (Icon: any, size: number, color: string) => {
@@ -19,54 +43,54 @@ export default function ProfileScreen() {
   const profileActions = [
     {
       id: '1',
-      title: 'Edit Profile',
-      description: 'Update your personal information',
+      title: t('profile.editProfile'),
+      description: t('profile.editProfileDesc'),
       icon: Edit,
-      color: '#125E8A',
+      color: '#0077B6',
       action: () => router.push('/(tabs)/edit-profile'),
     },
     {
       id: '2',
-      title: 'Security',
-      description: 'Change password and security settings',
-      icon: Lock,
+      title: t('profile.language'),
+      description: t('profile.languageDesc', { language: getCurrentLanguageName() }),
+      icon: Globe,
       color: '#10B981',
-      action: () => router.push('/(tabs)/security'),
+      action: () => setLanguageModalVisible(true),
+      hasChevron: true,
     },
     {
       id: '3',
-      title: 'Notification Settings',
-      description: 'Customize notification preferences',
+      title: t('profile.notificationSettings'),
+      description: t('profile.notificationDesc'),
       icon: Bell,
       color: '#F59E0B',
-      action: () => alert('Notification settings coming soon!'),
+      action: () => alert(t('profile.comingSoon')),
       hasSwitch: true,
       switchValue: notificationsEnabled,
       onSwitchChange: (value: boolean) => {
         setNotificationsEnabled(value);
-        alert(value ? 'Notifications enabled' : 'Notifications disabled');
+        alert(value ? t('profile.notificationsEnabled') : t('profile.notificationsDisabled'));
       }
     },
-
     {
       id: '4',
-      title: 'Help & Support',
-      description: 'Get assistance with the app',
+      title: t('profile.helpSupport'),
+      description: t('profile.helpSupportDesc'),
       icon: HelpCircle,
       color: '#EC4899',
-      action: () => alert('Help & Support feature coming soon!'),
+      action: () => alert(t('profile.comingSoon')),
     },
   ];
 
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#125E8A', '#89AAE6']}
+        colors={['#0077B6', '#90CAF9']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
           <View style={styles.titleContainer}>
-            <Text style={styles.headerTitle}>Profile</Text>
+            <Text style={styles.headerTitle}>{t('profile.title')}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -77,43 +101,86 @@ export default function ProfileScreen() {
             {profileData.profilePhoto ? (
               <Image source={{ uri: profileData.profilePhoto }} style={styles.profileImage} />
             ) : (
-              renderIcon(User, 40, "#125E8A")
+              renderIcon(User, 40, "#0077B6")
             )}
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{profileData.name}</Text>
             <Text style={styles.profileProfession}>{profileData.profession}</Text>
             <Text style={styles.profileUnit}>{profileData.address.split(',')[0]}</Text>
-            <Text style={styles.profileMember}>Member since 2022</Text>
+            <Text style={styles.profileMember}>{t('profile.memberSince')}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Settings</Text>
-          {profileActions.map((action) => (
-            <TouchableOpacity
-              key={action.id}
-              style={styles.menuItem}
-              onPress={action.action}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: `${action.color}15` }]}>
-                {renderIcon(action.icon, 20, action.color)}
-              </View>
-              <View style={styles.menuText}>
-                <Text style={styles.menuTitle}>{action.title}</Text>
-                <Text style={styles.menuDescription}>{action.description}</Text>
-              </View>
-              {action.hasSwitch && (
-                <Switch
-                  value={action.switchValue}
-                  onValueChange={action.onSwitchChange}
-                  trackColor={{ false: '#D1D5DB', true: '#F59E0B' }}
-                  thumbColor={action.switchValue ? '#FFFFFF' : '#FFFFFF'}
-                  ios_backgroundColor="#D1D5DB"
-                />
-              )}
-            </TouchableOpacity>
-          ))}
+          <Text style={styles.sectionTitle}>{t('profile.accountSettings')}</Text>
+          
+          {/* Edit Profile */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push('/(tabs)/edit-profile')}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: '#0077B615' }]}>
+              {renderIcon(Edit, 20, '#0077B6')}
+            </View>
+            <View style={styles.menuText}>
+              <Text style={styles.menuTitle}>{t('profile.editProfile')}</Text>
+              <Text style={styles.menuDescription}>{t('profile.editProfileDesc')}</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Language Option */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => setLanguageModalVisible(true)}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: '#10B98115' }]}>
+              {renderIcon(Globe, 20, '#10B981')}
+            </View>
+            <View style={styles.menuText}>
+              <Text style={styles.menuTitle}>{t('profile.language')}</Text>
+              <Text style={styles.menuDescription}>{t('profile.languageDesc', { language: getCurrentLanguageName() })}</Text>
+            </View>
+            <ChevronRight size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+
+          {/* Notification Settings */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => alert(t('profile.comingSoon'))}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: '#F59E0B15' }]}>
+              {renderIcon(Bell, 20, '#F59E0B')}
+            </View>
+            <View style={styles.menuText}>
+              <Text style={styles.menuTitle}>{t('profile.notificationSettings')}</Text>
+              <Text style={styles.menuDescription}>{t('profile.notificationDesc')}</Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={(value) => {
+                setNotificationsEnabled(value);
+                alert(value ? t('profile.notificationsEnabled') : t('profile.notificationsDisabled'));
+              }}
+              trackColor={{ false: '#D1D5DB', true: '#F59E0B' }}
+              thumbColor={notificationsEnabled ? '#FFFFFF' : '#FFFFFF'}
+              ios_backgroundColor="#D1D5DB"
+            />
+          </TouchableOpacity>
+
+          {/* Help & Support */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => alert(t('profile.comingSoon'))}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: '#EC489915' }]}>
+              {renderIcon(HelpCircle, 20, '#EC4899')}
+            </View>
+            <View style={styles.menuText}>
+              <Text style={styles.menuTitle}>{t('profile.helpSupport')}</Text>
+              <Text style={styles.menuDescription}>{t('profile.helpSupportDesc')}</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity 
@@ -124,14 +191,67 @@ export default function ProfileScreen() {
           }}
         >
           {renderIcon(LogOut, 18, "#FFFFFF")}
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>{t('profile.logout')}</Text>
         </TouchableOpacity>
         
         <View style={styles.footer}>
-          <Text style={styles.versionText}>Version 1.0.0</Text>
-          <Text style={styles.copyrightText}>© 2023 SecureIn Community App</Text>
+          <Text style={styles.versionText}>{t('profile.version')}</Text>
+          <Text style={styles.copyrightText}>{t('profile.copyright')}</Text>
         </View>
       </ScrollView>
+
+      {/* Language Selection Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={languageModalVisible}
+        onRequestClose={() => setLanguageModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('languageModal.title')}</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setLanguageModalVisible(false)}
+              >
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.languageList} showsVerticalScrollIndicator={false}>
+              {availableLanguages.map((language) => (
+                <TouchableOpacity
+                  key={language.code}
+                  style={[
+                    styles.languageItem,
+                    currentLanguage === language.code && styles.selectedLanguageItem
+                  ]}
+                  onPress={() => handleLanguageSelect(language)}
+                >
+                  <View style={styles.languageInfo}>
+                    <Text style={[
+                      styles.languageName,
+                      currentLanguage === language.code && styles.selectedLanguageName
+                    ]}>
+                      {language.name}
+                    </Text>
+                    <Text style={[
+                      styles.languageNative,
+                      currentLanguage === language.code && styles.selectedLanguageNative
+                    ]}>
+                      {language.nativeName}
+                    </Text>
+                  </View>
+                  {currentLanguage === language.code && (
+                    <Check size={20} color="#10B981" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -296,5 +416,85 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
+  },
+  // Language Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '100%',
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  modalCloseButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: 'bold',
+  },
+  languageList: {
+    maxHeight: 400,
+  },
+  languageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F9FAFB',
+  },
+  selectedLanguageItem: {
+    backgroundColor: '#F0FDF4',
+    borderBottomColor: '#10B981',
+  },
+  languageInfo: {
+    flex: 1,
+  },
+  languageName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  selectedLanguageName: {
+    color: '#10B981',
+  },
+  languageNative: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  selectedLanguageNative: {
+    color: '#059669',
   },
 });

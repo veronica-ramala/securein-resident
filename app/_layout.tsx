@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useBackHandler } from '@/hooks/useBackHandler';
 import { UserProvider } from '../context/UserContext';
+import { LocalizationProvider } from '../context/LocalizationContext';
+import '../src/i18n/i18n'; // Initialize i18n
 
 function RootLayoutContent() {
   useFrameworkReady();
@@ -14,6 +16,8 @@ function RootLayoutContent() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="flash-screen" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome-flash" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
@@ -24,8 +28,10 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <UserProvider>
-      <RootLayoutContent />
-    </UserProvider>
+    <LocalizationProvider>
+      <UserProvider>
+        <RootLayoutContent />
+      </UserProvider>
+    </LocalizationProvider>
   );
 }

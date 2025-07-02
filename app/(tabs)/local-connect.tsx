@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Users, Search, Phone, Home, Briefcase, ChevronLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 export default function LocalConnectScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const router = useRouter();
   
   // Sample data for neighbors
@@ -21,14 +23,19 @@ export default function LocalConnectScreen() {
     { id: '10', name: 'Rahul Mehta', profession: 'Chef', contactNumber: '+91 09876 54321', flatNumber: 'A-403' },
   ];
 
-  // Filter neighbors based on search query
+  // Get unique professions for category buttons
+  const professions = ['All', ...new Set(neighbors.map(neighbor => neighbor.profession))];
+
+  // Filter neighbors based on search query and selected category
   const filteredNeighbors = neighbors.filter(neighbor => {
     const searchLower = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = (
       neighbor.name.toLowerCase().includes(searchLower) ||
       neighbor.profession.toLowerCase().includes(searchLower) ||
       neighbor.flatNumber.toLowerCase().includes(searchLower)
     );
+    const matchesCategory = selectedCategory === 'All' || neighbor.profession === selectedCategory;
+    return matchesSearch && matchesCategory;
   });
 
   const handleCall = (name, number) => {
@@ -62,6 +69,31 @@ export default function LocalConnectScreen() {
           placeholderTextColor="#9CA3AF"
         />
       </View>
+
+      <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.categoryScrollView}
+            contentContainerStyle={styles.categoryContainer}
+          >
+        {professions.map(profession => (
+          <TouchableOpacity
+            key={profession}
+            style={[
+              styles.categoryButton,
+              selectedCategory === profession && styles.selectedCategoryButton
+            ]}
+            onPress={() => setSelectedCategory(profession)}
+          >
+            <Text style={[
+              styles.categoryButtonText,
+              selectedCategory === profession && styles.selectedCategoryButtonText
+            ]}>
+              {profession}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
@@ -159,6 +191,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
   },
+  categoryScrollView: {
+    maxHeight: 60,
+    marginBottom: 8,
+  },
+  categoryContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  categoryButton: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  selectedCategoryButton: {
+    backgroundColor: '#7C3AED',
+    borderColor: '#7C3AED',
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  selectedCategoryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+
   scrollView: {
     flex: 1,
   },

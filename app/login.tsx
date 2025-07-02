@@ -15,10 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Lock, User, Home, Phone, Mail, Eye, EyeOff } from 'lucide-react-native';
 import { useUserContext } from '../context/UserContext';
+import { useLocalization } from '../context/LocalizationContext';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useUserContext();
+  const { t } = useLocalization();
   
   // State for form fields
   const [residentName, setResidentName] = useState('');
@@ -32,22 +34,22 @@ export default function LoginScreen() {
   const handleLogin = () => {
     // Validate inputs
     if (!residentName.trim()) {
-      Alert.alert('Error', 'Please enter your name');
+      Alert.alert(t('common.error'), 'Please enter your name');
       return;
     }
     
     if (!flatNumber.trim()) {
-      Alert.alert('Error', 'Please enter your flat number');
+      Alert.alert(t('common.error'), 'Please enter your flat number');
       return;
     }
     
     if (!contactInfo.trim()) {
-      Alert.alert('Error', `Please enter your ${contactType === 'phone' ? 'phone number' : 'email'}`);
+      Alert.alert(t('common.error'), `Please enter your ${contactType === 'phone' ? 'phone number' : 'email'}`);
       return;
     }
     
     if (!password.trim()) {
-      Alert.alert('Error', 'Please enter your password');
+      Alert.alert(t('common.error'), 'Please enter your password');
       return;
     }
     
@@ -55,7 +57,7 @@ export default function LoginScreen() {
     if (contactType === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(contactInfo)) {
-        Alert.alert('Error', 'Please enter a valid email address');
+        Alert.alert(t('common.error'), 'Please enter a valid email address');
         return;
       }
     }
@@ -64,7 +66,7 @@ export default function LoginScreen() {
     if (contactType === 'phone') {
       const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
       if (!phoneRegex.test(contactInfo)) {
-        Alert.alert('Error', 'Please enter a valid phone number (format: 555-123-4567)');
+        Alert.alert(t('common.error'), 'Please enter a valid phone number (format: 555-123-4567)');
         return;
       }
     }
@@ -91,8 +93,8 @@ export default function LoginScreen() {
       // Call the login function from context
       login();
       
-      // Navigate to the main app
-      router.replace('/(tabs)');
+      // Navigate to welcome flash screen after successful login
+      router.replace('/welcome-flash');
     } else {
       Alert.alert('Login Failed', 'Invalid credentials. Please try again.');
     }
@@ -127,7 +129,7 @@ export default function LoginScreen() {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.headerText}>Community App</Text>
+        <Text style={styles.headerText}>{t('features.communityApp')}</Text>
       </View>
       
       <KeyboardAvoidingView

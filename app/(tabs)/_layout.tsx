@@ -1,8 +1,19 @@
+import React, { memo, useCallback } from 'react';
 import { Tabs } from 'expo-router';
-import { Home, User } from 'lucide-react-native';
+import { Home, User, ShoppingBag, Calendar } from 'lucide-react-native';
 import ServiceIcon from '../../components/ServiceIcon';
+import { useLocalization } from '../../context/LocalizationContext';
+import { s, vs, fontSize, getResponsiveText, getTabLabel } from '../../utils/responsive';
 
-export default function TabLayout() {
+// Memoize tab icons for better performance
+const HomeIcon = memo(({ color }: { color: string }) => <Home size={22} color={color} />);
+const ServiceIconMemo = memo(({ color }: { color: string }) => <ServiceIcon size={22} color={color} />);
+const CalendarIcon = memo(({ color }: { color: string }) => <Calendar size={22} color={color} />);
+const ShoppingIcon = memo(({ color }: { color: string }) => <ShoppingBag size={22} color={color} />);
+const UserIcon = memo(({ color }: { color: string }) => <User size={22} color={color} />);
+
+function TabLayout() {
+  const { t } = useLocalization();
   return (
     <Tabs
       screenOptions={{
@@ -13,46 +24,64 @@ export default function TabLayout() {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#DDDBCB',
           borderTopWidth: 1,
-          height: 75,
+          height: vs(85), // Increased height for better text visibility
+          paddingBottom: vs(8),
+          paddingTop: vs(8),
         },
         tabBarItemStyle: {
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingVertical: 8,
+          justifyContent: 'center',
+          paddingVertical: vs(4),
         },
         tabBarShowLabel: true,
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-          marginTop: 4,
+          fontSize: fontSize.tiny,
+          fontWeight: '600',
+          marginTop: vs(2),
+          textAlign: 'center',
+          lineHeight: fontSize.tiny * 1.3,
+          flexWrap: 'wrap',
+          maxWidth: s(80), // Limit width to prevent overflow
         },
+        tabBarLabelPosition: 'below-icon',
+        tabBarAllowFontScaling: true,
+        lazy: true, // Enable lazy loading
+        freezeOnBlur: true, // Freeze inactive screens for better performance
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          tabBarIcon: ({ color }) => (
-            <Home size={24} color={color} />
-          ),
-          title: 'Home', // This is for header/navigation, not shown in tab bar
+          tabBarIcon: ({ color }) => <HomeIcon color={color} />,
+          title: getTabLabel(t('navigation.home')),
         }}
       />
       <Tabs.Screen
         name="services"
         options={{
-          tabBarIcon: ({ color }) => (
-            <ServiceIcon size={24} color={color} />
-          ),
-          title: 'Services',
+          tabBarIcon: ({ color }) => <ServiceIconMemo color={color} />,
+          title: getTabLabel(t('navigation.services')),
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          tabBarIcon: ({ color }) => <CalendarIcon color={color} />,
+          title: getTabLabel(t('events.title')),
+        }}
+      />
+      <Tabs.Screen
+        name="buy-sell"
+        options={{
+          tabBarIcon: ({ color }) => <ShoppingIcon color={color} />,
+          title: getTabLabel(t('buySell.title')),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarIcon: ({ color }) => (
-            <User size={24} color={color} />
-          ),
-          title: 'Profile',
+          tabBarIcon: ({ color }) => <UserIcon color={color} />,
+          title: getTabLabel(t('navigation.profile')),
         }}
       />
       
@@ -109,6 +138,16 @@ export default function TabLayout() {
         name="security"
         options={{ href: null }}
       />
+      <Tabs.Screen
+        name="elder-monitoring"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{ href: null }}
+      />
     </Tabs>
   );
 }
+
+export default memo(TabLayout);
