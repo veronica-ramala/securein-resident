@@ -1,0 +1,417 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Share,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import {
+  ChevronLeft,
+  Share2,
+  Download,
+  Check,
+} from 'lucide-react-native';
+import Svg, { Rect, Circle } from 'react-native-svg';
+
+// Enhanced QR Code Component
+const QRCode = ({ size = 200, passType = 'visitor', data = {} }) => {
+  const isVIP = passType === 'vip';
+  
+  return (
+    <View style={[
+      styles.qrCodeContainer,
+      { 
+        width: size + 40, 
+        height: size + 80,
+        backgroundColor: isVIP ? '#ECFDF5' : '#FEF9C3',
+        borderColor: isVIP ? '#10B981' : '#EAB308',
+      }
+    ]}>
+      <Text style={[
+        styles.qrTitle,
+        { color: isVIP ? '#047857' : '#854D0E' }
+      ]}>
+        {isVIP ? 'VIP PASS' : 'VISITOR PASS'}
+      </Text>
+      
+      <View style={{ 
+        width: size, 
+        height: size, 
+        backgroundColor: 'white', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        borderWidth: 1, 
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        marginVertical: 10,
+      }}>
+        <Svg width={size * 0.8} height={size * 0.8} viewBox="0 0 100 100">
+          {/* Enhanced QR code pattern */}
+          <Rect x="10" y="10" width="80" height="80" fill="white" />
+          <Rect x="20" y="20" width="20" height="20" fill="black" />
+          <Rect x="60" y="20" width="20" height="20" fill="black" />
+          <Rect x="20" y="60" width="20" height="20" fill="black" />
+          {isVIP ? (
+            <>
+              <Rect x="45" y="45" width="35" height="35" fill="black" />
+              <Circle cx="62.5" cy="62.5" r="10" fill="white" />
+              <Rect x="30" y="30" width="8" height="8" fill="black" />
+              <Rect x="70" y="30" width="8" height="8" fill="black" />
+              <Rect x="30" y="70" width="8" height="8" fill="black" />
+            </>
+          ) : (
+            <>
+              <Rect x="50" y="50" width="30" height="30" fill="black" />
+              <Rect x="30" y="30" width="10" height="10" fill="black" />
+              <Rect x="70" y="70" width="10" height="10" fill="black" />
+              <Rect x="30" y="50" width="10" height="10" fill="black" />
+              <Rect x="50" y="30" width="10" height="10" fill="black" />
+            </>
+          )}
+        </Svg>
+      </View>
+      
+      <Text style={[
+        styles.qrSubtitle,
+        { color: isVIP ? '#047857' : '#854D0E' }
+      ]}>
+        Scan for Entry/Exit
+      </Text>
+    </View>
+  );
+};
+
+export default function VisitorQRScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    passType: string;
+    visitorName: string;
+    purpose: string;
+    fromDate: string;
+    toDate: string;
+    fromTime: string;
+    toTime: string;
+  }>();
+
+  const isVIP = params.passType === 'vip';
+
+  const handleShare = async () => {
+    try {
+      const message = `${isVIP ? 'VIP' : 'Visitor'} Pass Generated\n\n` +
+        `Name: ${params.visitorName}\n` +
+        `Purpose: ${params.purpose}\n` +
+        `From: ${params.fromDate} ${params.fromTime}\n` +
+        `To: ${params.toDate} ${params.toTime}\n\n` +
+        `Please show this QR code at the gate for entry.`;
+
+      await Share.share({
+        message,
+        title: `${isVIP ? 'VIP' : 'Visitor'} Pass`,
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share the pass');
+    }
+  };
+
+  const handleDownload = () => {
+    Alert.alert(
+      'Download Pass',
+      'QR code has been saved to your device gallery.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleDone = () => {
+    // Navigate back to the main screen or gate screen
+    router.push('/(tabs)/gate');
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={isVIP ? ['#047857', '#10B981'] : ['#125E8A', '#89AAE6']}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <ChevronLeft size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {isVIP ? 'VIP' : 'Visitor'} Pass Generated
+          </Text>
+          <View style={{ width: 24 }} />
+        </View>
+      </LinearGradient>
+
+      <View style={styles.content}>
+        <View style={styles.successSection}>
+          <View style={[
+            styles.successIcon,
+            { backgroundColor: isVIP ? '#ECFDF5' : '#F0F9FF' }
+          ]}>
+            <Check size={40} color={isVIP ? '#10B981' : '#0EA5E9'} />
+          </View>
+          <Text style={styles.successTitle}>Pass Generated Successfully!</Text>
+          <Text style={styles.successSubtitle}>
+            Your {isVIP ? 'VIP' : 'visitor'} pass is ready to use
+          </Text>
+        </View>
+
+        <View style={styles.qrSection}>
+          <QRCode 
+            size={220} 
+            passType={params.passType} 
+            data={params}
+          />
+        </View>
+
+        <View style={styles.detailsSection}>
+          <Text style={styles.detailsTitle}>Pass Details</Text>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Name:</Text>
+            <Text style={styles.detailValue}>{params.visitorName}</Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Purpose:</Text>
+            <Text style={styles.detailValue}>{params.purpose}</Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Valid From:</Text>
+            <Text style={styles.detailValue}>{params.fromDate} {params.fromTime}</Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Valid Until:</Text>
+            <Text style={styles.detailValue}>{params.toDate} {params.toTime}</Text>
+          </View>
+        </View>
+
+        <View style={styles.actionsSection}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+            <LinearGradient
+              colors={isVIP ? ['#047857', '#10B981'] : ['#125E8A', '#89AAE6']}
+              style={styles.actionButtonGradient}
+            >
+              <Share2 size={20} color="#FFFFFF" />
+              <Text style={styles.actionButtonText}>Share Pass</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryButton} onPress={handleDownload}>
+            <Download size={20} color={isVIP ? '#047857' : '#125E8A'} />
+            <Text style={[
+              styles.secondaryButtonText,
+              { color: isVIP ? '#047857' : '#125E8A' }
+            ]}>
+              Download QR
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
+          <Text style={styles.doneButtonText}>Done</Text>
+        </TouchableOpacity>
+
+        <View style={styles.instructionsSection}>
+          <Text style={styles.instructionsTitle}>Instructions</Text>
+          <Text style={styles.instructionsText}>
+            • Show this QR code to the security guard at the gate
+          </Text>
+          <Text style={styles.instructionsText}>
+            • Keep the pass accessible during your visit
+          </Text>
+          <Text style={styles.instructionsText}>
+            • The pass is valid only for the specified date and time range
+          </Text>
+          {isVIP && (
+            <Text style={[styles.instructionsText, { color: '#047857', fontWeight: '600' }]}>
+              • VIP pass provides priority access and special privileges
+            </Text>
+          )}
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  backButton: {
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  successSection: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  successIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#125E8A',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  successSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  qrSection: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  qrCodeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+    borderWidth: 2,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  qrTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  qrSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  detailsSection: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+  },
+  detailsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#125E8A',
+    marginBottom: 15,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#000',
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+  },
+  actionsSection: {
+    marginBottom: 20,
+  },
+  actionButton: {
+    marginBottom: 15,
+  },
+  actionButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 15,
+    gap: 10,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 15,
+    backgroundColor: '#F9F9F9',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    gap: 10,
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  doneButton: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginBottom: 20,
+  },
+  doneButtonText: {
+    fontSize: 16,
+    color: '#666',
+    textDecorationLine: 'underline',
+  },
+  instructionsSection: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 15,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0EA5E9',
+  },
+  instructionsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#0369A1',
+    marginBottom: 10,
+  },
+  instructionsText: {
+    fontSize: 14,
+    color: '#0369A1',
+    marginBottom: 5,
+    lineHeight: 18,
+  },
+});

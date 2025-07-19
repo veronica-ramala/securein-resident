@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 expo start",
+    "dev": "expo start",
     "build:web": "expo export --platform web",
     "lint": "expo lint"
   },
@@ -12,8 +12,11 @@
     "@expo/vector-icons": "^14.1.0",
     "@lucide/lab": "^0.1.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-community/datetimepicker": "8.3.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
+    "@supabase/supabase-js": "^2.52.0",
+    "dayjs": "^1.11.13",
     "expo": "^53.0.11",
     "expo-blur": "~14.1.5",
     "expo-camera": "~16.1.8",
@@ -50,15 +53,14 @@
     "react-native-svg": "15.11.2",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.20.0",
-    "react-native-webview": "13.13.5",
-    "@react-native-community/datetimepicker": "8.3.0"
+    "react-native-webview": "13.13.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
-    "typescript": "~5.8.3",
     "eslint": "^9.0.0",
-    "eslint-config-expo": "~9.2.0"
+    "eslint-config-expo": "~9.2.0",
+    "typescript": "~5.8.3"
   },
   "expo": {
     "doctor": {

@@ -146,6 +146,14 @@ function TabLayout() {
         name="notifications"
         options={{ href: null }}
       />
+      <Tabs.Screen
+        name="visitor-registration"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="visitor-qr"
+        options={{ href: null }}
+      />
     </Tabs>
   );
 }

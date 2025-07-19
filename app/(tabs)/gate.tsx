@@ -56,7 +56,7 @@ const QRCode = ({ size = 200, passType = 'visitor' }) => {
 export default function GatePage() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedPass, setSelectedPass] = useState(null);
+  const [selectedPass, setSelectedPass] = useState<'visitor' | 'vip' | null>(null);
   
   // Visitor activity data
   const visitorActivity = [
@@ -70,9 +70,14 @@ export default function GatePage() {
     setModalVisible(true);
   };
 
-  const selectPass = (passType) => {
+  const selectPass = (passType: 'visitor' | 'vip') => {
     setSelectedPass(passType);
     setModalVisible(false);
+    // Navigate to visitor registration form
+    router.push({
+      pathname: '/(tabs)/visitor-registration',
+      params: { passType }
+    });
   };
 
   return (
