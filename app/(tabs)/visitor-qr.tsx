@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
   Alert,
   Share,
@@ -96,7 +97,66 @@ export default function VisitorQRScreen() {
     toDate: string;
     fromTime: string;
     toTime: string;
+    fromDateTime?: string;
+    toDateTime?: string;
+    dbRecordId?: string;      // <-- Added for validation and linter fix
+    generatedAt?: string;     // <-- Added for validation and linter fix
   }>();
+
+  // 🔒 CRITICAL: Validate that all required form data is present
+  React.useEffect(() => {
+    const requiredFields = [
+      'passType',
+      'visitorName', 
+      'purpose',
+      'fromDate',
+      'toDate', 
+      'fromTime',
+      'toTime',
+      'dbRecordId',      // <-- Require this
+      'generatedAt',     // <-- Require this
+    ];
+
+    const missingFields = requiredFields.filter(field => !params[field as keyof typeof params]);
+    
+    if (missingFields.length > 0) {
+      Alert.alert(
+        'Invalid Access',
+        'QR code can only be generated after completing the registration form. Please fill out the form first.',
+        [
+          {
+            text: 'Go to Registration',
+            onPress: () => router.replace('/(tabs)/visitor-registration'),
+            style: 'default'
+          }
+        ],
+        { cancelable: false }
+      );
+      return;
+    }
+
+    // Additional validation for form data integrity
+    if (!params.visitorName?.trim() || 
+        !params.purpose?.trim() || 
+        !params.fromDate?.trim() || 
+        !params.toDate?.trim() ||
+        !params.fromTime?.trim() || 
+        !params.toTime?.trim()) {
+      Alert.alert(
+        'Incomplete Data',
+        'Registration form data is incomplete. Please complete the registration form first.',
+        [
+          {
+            text: 'Go to Registration',
+            onPress: () => router.replace('/(tabs)/visitor-registration'),
+            style: 'default'
+          }
+        ],
+        { cancelable: false }
+      );
+      return;
+    }
+  }, [params, router]);
 
   const isVIP = params.passType === 'vip';
 
@@ -134,7 +194,7 @@ export default function VisitorQRScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={isVIP ? ['#047857', '#10B981'] : ['#125E8A', '#89AAE6']}
+        colors={isVIP ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -148,13 +208,17 @@ export default function VisitorQRScreen() {
         </View>
       </LinearGradient>
 
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.successSection}>
           <View style={[
             styles.successIcon,
-            { backgroundColor: isVIP ? '#ECFDF5' : '#F0F9FF' }
+            { backgroundColor: isVIP ? '#ECFDF5' : '#FEF3C7' }
           ]}>
-            <Check size={40} color={isVIP ? '#10B981' : '#0EA5E9'} />
+            <Check size={40} color={isVIP ? '#10B981' : '#F59E0B'} />
           </View>
           <Text style={styles.successTitle}>Pass Generated Successfully!</Text>
           <Text style={styles.successSubtitle}>
@@ -192,12 +256,30 @@ export default function VisitorQRScreen() {
             <Text style={styles.detailLabel}>Valid Until:</Text>
             <Text style={styles.detailValue}>{params.toDate} {params.toTime}</Text>
           </View>
+
+          {params.dbRecordId && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Pass ID:</Text>
+              <Text style={[styles.detailValue, { fontSize: 12, color: '#666' }]}>
+                #{params.dbRecordId}
+              </Text>
+            </View>
+          )}
+
+          {params.generatedAt && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Generated:</Text>
+              <Text style={[styles.detailValue, { fontSize: 12, color: '#666' }]}>
+                {new Date(params.generatedAt).toLocaleString()}
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.actionsSection}>
           <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
             <LinearGradient
-              colors={isVIP ? ['#047857', '#10B981'] : ['#125E8A', '#89AAE6']}
+              colors={isVIP ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
               style={styles.actionButtonGradient}
             >
               <Share2 size={20} color="#FFFFFF" />
@@ -206,10 +288,10 @@ export default function VisitorQRScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton} onPress={handleDownload}>
-            <Download size={20} color={isVIP ? '#047857' : '#125E8A'} />
+            <Download size={20} color={isVIP ? '#047857' : '#D97706'} />
             <Text style={[
               styles.secondaryButtonText,
-              { color: isVIP ? '#047857' : '#125E8A' }
+              { color: isVIP ? '#047857' : '#D97706' }
             ]}>
               Download QR
             </Text>
@@ -237,7 +319,7 @@ export default function VisitorQRScreen() {
             </Text>
           )}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -269,7 +351,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 40,
   },
   successSection: {
     alignItems: 'center',
@@ -286,7 +371,7 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#125E8A',
+    color: '#D97706',
     marginBottom: 5,
     textAlign: 'center',
   },
@@ -330,7 +415,7 @@ const styles = StyleSheet.create({
   detailsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#125E8A',
+    color: '#D97706',
     marginBottom: 15,
   },
   detailRow: {
@@ -396,21 +481,21 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   instructionsSection: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: '#FEF3C7',
     borderRadius: 15,
     padding: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#0EA5E9',
+    borderLeftColor: '#F59E0B',
   },
   instructionsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#0369A1',
+    color: '#92400E',
     marginBottom: 10,
   },
   instructionsText: {
     fontSize: 14,
-    color: '#0369A1',
+    color: '#92400E',
     marginBottom: 5,
     lineHeight: 18,
   },

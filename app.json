@@ -31,7 +31,8 @@
       }
     },
     "android": {
-      "package": "com.veronica_ramala.secureinapp"
+      "package": "com.veronica_ramala.secureinapp",
+      "softwareKeyboardLayoutMode": "adjustPan"
     }
   }
 }

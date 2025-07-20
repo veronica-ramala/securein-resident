@@ -36,21 +36,25 @@ async function testInsert() {
   try {
     const payload = {
       visitor_name: 'Test Visitor',
-      phone_number: '0000000000',
-      purpose: 'Testing',
-      pass_type: 'vip',
-      status: 'active',
-      visit_date: '2025-07-18',
-      visit_time: '12:00:00',
-      visit_end_date: '2025-07-18',
-      expiry_time: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      qr_code: ''
+  phone_number: '0000000000',
+  purpose: 'Testing',
+  pass_type: 'vip',
+  status: 'active',
+  visit_date: '2025-07-18',
+  visit_time: new Date().toISOString(),  // ✅ FIXED
+  visit_end_date: '2025-07-18',
+  expiry_time: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  qr_code: ''
     };
-    const { data, error } = await supabase.from('visitor_passes').insert([payload]);
+    const { data, error } = await supabase
+      .from('visitor_passes')
+      .insert([payload])
+      .select()
+      .single();
     if (error) {
-      console.log('❌ Supabase insert failed:', error.message);
+      console.log('❌ Supabase insert failed:', error.message, error.details, error.hint);
     } else {
       console.log('✅ Supabase insert succeeded. Inserted data:', data);
     }

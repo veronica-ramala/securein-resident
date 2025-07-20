@@ -10,6 +10,9 @@ import {
   Alert,
   Platform,
   Modal,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,6 +32,7 @@ import {
 
 interface VisitorFormData {
   name: string;
+  phoneNumber: string;
   purpose: string;
   fromDate: Date | null;
   toDate: Date | null;
@@ -42,6 +46,7 @@ export default function VisitorRegistrationScreen() {
   
   const [formData, setFormData] = useState<VisitorFormData>({
     name: '',
+    phoneNumber: '',
     purpose: '',
     fromDate: null,
     toDate: null,
@@ -55,6 +60,9 @@ export default function VisitorRegistrationScreen() {
   }>({ visible: false, type: 'fromDate' });
 
   const [showPurposePicker, setShowPurposePicker] = useState(false);
+  
+  // 🔒 Loading state to prevent multiple submissions and ensure single QR generation
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const purposes = [
     'Business Meeting',
@@ -80,6 +88,15 @@ export default function VisitorRegistrationScreen() {
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
       Alert.alert('Validation Error', 'Please enter visitor name');
+      return false;
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      Alert.alert('Validation Error', 'Please enter phone number');
+      return false;
+    }
+    if (!/^\d{10}$/.test(formData.phoneNumber.trim())) {
+      Alert.alert('Validation Error', 'Please enter a valid 10-digit phone number');
       return false;
     }
 
@@ -118,20 +135,34 @@ export default function VisitorRegistrationScreen() {
     }
 
     // Create full datetime objects for proper comparison
+    // Since fromTime and toTime now contain combined date+time, use them directly
     const fromDateTime = dayjs(formData.fromTime);
     const toDateTime = dayjs(formData.toTime);
 
-    // If same date, validate time range
-    if (fromDateOnly.isSame(toDateOnly)) {
-      if (toDateTime.isBefore(fromDateTime) || toDateTime.isSame(fromDateTime)) {
-        Alert.alert('Validation Error', 'To Time must be after From Time when dates are the same');
-        return false;
-      }
+    // Validate that end datetime is after start datetime
+    if (toDateTime.isBefore(fromDateTime) || toDateTime.isSame(fromDateTime)) {
+      Alert.alert(
+        'Validation Error', 
+        'End date and time must be after start date and time. Please ensure at least 15 minutes difference.'
+      );
+      return false;
     }
 
-    // Additional validation: ensure the complete from datetime is before to datetime
-    if (toDateTime.isBefore(fromDateTime)) {
-      Alert.alert('Validation Error', 'End date and time must be after start date and time');
+    // Additional validation: ensure minimum duration (15 minutes)
+    const durationMinutes = toDateTime.diff(fromDateTime, 'minutes');
+    if (durationMinutes <= 0) {
+      Alert.alert(
+        'Validation Error', 
+        'End date and time must be after start date and time. Please check your selection.'
+      );
+      return false;
+    }
+    
+    if (durationMinutes < 15) {
+      Alert.alert(
+        'Validation Error', 
+        'Visit duration must be at least 15 minutes. Please adjust your times.'
+      );
       return false;
     }
 
@@ -147,51 +178,104 @@ export default function VisitorRegistrationScreen() {
       const { type } = showDatePicker;
       
       if (type.includes('Time')) {
-        // For time selection, combine with the corresponding date
+        // For time selection, ensure corresponding date is selected first
         const correspondingDate = type === 'fromTime' ? formData.fromDate : formData.toDate;
-        if (correspondingDate) {
-          // Create a new date with the selected time but using the corresponding date
-          const combinedDateTime = new Date(correspondingDate);
-          combinedDateTime.setHours(selectedDate.getHours());
-          combinedDateTime.setMinutes(selectedDate.getMinutes());
-          combinedDateTime.setSeconds(0);
-          combinedDateTime.setMilliseconds(0);
-          
-          setFormData(prev => ({
-            ...prev,
-            [type]: combinedDateTime,
-          }));
+        
+        if (!correspondingDate) {
+          Alert.alert(
+            'Date Required', 
+            `Please select ${type === 'fromTime' ? 'From Date' : 'To Date'} first before selecting time.`
+          );
+          return;
         }
-      } else {
-        // For date selection, just set the date
+
+        // Create a new Date object using the corresponding date
+        const combinedDateTime = new Date(correspondingDate);
+        // Set the time components from the selected time
+        combinedDateTime.setHours(selectedDate.getHours());
+        combinedDateTime.setMinutes(selectedDate.getMinutes());
+        combinedDateTime.setSeconds(0);
+        combinedDateTime.setMilliseconds(0);
+        
+        // Special validation for toTime to prevent zero or negative duration
+        if (type === 'toTime' && formData.fromTime) {
+          const durationMinutes = dayjs(combinedDateTime).diff(dayjs(formData.fromTime), 'minutes');
+          
+          if (durationMinutes <= 0) {
+            Alert.alert(
+              'Invalid Time Selection',
+              'To Time must be after From Time. Please select a time that creates a positive duration.',
+              [{ text: 'OK', style: 'default' }]
+            );
+            return; // Don't update the state with invalid time
+          }
+          
+          if (durationMinutes < 15) {
+            Alert.alert(
+              'Minimum Duration Required',
+              `Selected duration is ${durationMinutes} minutes. Please select a time that creates at least 15 minutes duration.`,
+              [{ text: 'OK', style: 'default' }]
+            );
+            return; // Don't update the state with invalid time
+          }
+        }
+        
         setFormData(prev => ({
           ...prev,
-          [type]: selectedDate,
+          [type]: combinedDateTime,
         }));
-
-        // Reset dependent time fields when date changes
-        if (type === 'fromDate' && formData.fromTime) {
-          setFormData(prev => ({ ...prev, fromTime: null }));
-        }
-        if (type === 'toDate' && formData.toTime) {
-          setFormData(prev => ({ ...prev, toTime: null }));
-        }
+      } else {
+        // For date selection, set the date and reset corresponding time
+        setFormData(prev => {
+          const newData = {
+            ...prev,
+            [type]: selectedDate,
+          };
+          
+          // Reset corresponding time when date changes to avoid confusion
+          if (type === 'fromDate') {
+            newData.fromTime = null;
+          } else if (type === 'toDate') {
+            newData.toTime = null;
+          }
+          
+          return newData;
+        });
       }
     }
 
     if (Platform.OS === 'ios') {
-      // Keep picker open on iOS
+      // Keep picker open on iOS for better UX
     }
   };
 
   const showDateTimePicker = (type: 'fromDate' | 'toDate' | 'fromTime' | 'toTime') => {
     // Prevent time selection if corresponding date is not selected
     if (type === 'fromTime' && !formData.fromDate) {
-      Alert.alert('Please select From Date first');
+      Alert.alert(
+        'Date Required', 
+        'Please select From Date first before selecting From Time.',
+        [{ text: 'OK', style: 'default' }]
+      );
       return;
     }
+    
     if (type === 'toTime' && !formData.toDate) {
-      Alert.alert('Please select To Date first');
+      Alert.alert(
+        'Date Required', 
+        'Please select To Date first before selecting To Time.',
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
+    // Additional validation for toTime - ensure fromTime is selected first
+    if (type === 'toTime' && !formData.fromTime) {
+      Alert.alert(
+        'From Time Required', 
+        'Please select From Time first before selecting To Time to ensure proper duration validation.',
+        [{ text: 'OK', style: 'default' }]
+      );
       return;
     }
 
@@ -215,50 +299,112 @@ export default function VisitorRegistrationScreen() {
   };
 
   const handleSubmit = async () => {
-    if (validateForm()) {
-      try {
-        // Use the actual datetime objects which already have correct date+time combinations
-        const formattedVisitTime = dayjs(formData.fromTime).toISOString();
-        const formattedExpiryTime = dayjs(formData.toTime).toISOString();
+    // 🔒 STEP 0: Prevent multiple submissions
+    if (isSubmitting) {
+      Alert.alert('Please Wait', 'Your visitor pass is being generated. Please wait...');
+      return;
+    }
 
-        const { data, error } = await supabase.from('visitor_pass').insert([
-          {
-            name: formData.name,
-            purpose: formData.purpose,
-            visit_date: formatDate(formData.fromDate),
-            expiry_date: formatDate(formData.toDate),
-            visit_time: formattedVisitTime,
-            expiry_time: formattedExpiryTime,
-            pass_type: passType || 'visitor',
-          }
-        ]).select().single();
+    // 🔒 STEP 1: Validate form completely before proceeding
+    if (!validateForm()) {
+      Alert.alert(
+        'Form Incomplete',
+        'Please fill out all required fields before generating the QR code.',
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
 
-        if (error) {
-          console.error(error);
-          Alert.alert('Error', 'Failed to save to database');
-          return;
-        }
+    setIsSubmitting(true);
 
-        // Navigate to QR generation screen with form data
-        router.push({
-          pathname: '/(tabs)/visitor-qr',
-          params: {
-            passType,
-            visitorName: formData.name,
-            purpose: formData.purpose,
-            fromDate: formatDate(formData.fromDate),
-            toDate: formatDate(formData.toDate),
-            fromTime: formatTime(formData.fromTime),
-            toTime: formatTime(formData.toTime),
-            // Also pass the complete datetime for QR generation
-            fromDateTime: formattedVisitTime,
-            toDateTime: formattedExpiryTime,
-          }
-        });
-      } catch (error) {
-        console.error('Error saving visitor pass:', error);
-        Alert.alert('Error', 'Failed to save visitor pass');
+    try {
+      // 🔒 STEP 2: Format and validate data before database save
+      const startDateTime = formData.fromTime!.toISOString();
+      const endDateTime = formData.toTime!.toISOString();
+      
+      // Additional data integrity check
+      if (!formData.name.trim() || !formData.phoneNumber.trim() || !formData.purpose.trim()) {
+        Alert.alert('Error', 'Form data is invalid. Please check all fields.');
+        return;
       }
+
+      console.log('🔄 Saving visitor pass to database...');
+      
+      // 🔒 STEP 3: Save to database first - QR generation ONLY after successful save
+      const { data, error } = await supabase.from('visitor_passes').insert([
+        {
+          visitor_name: formData.name.trim(),
+          phone_number: formData.phoneNumber.trim(),
+          purpose: formData.purpose.trim(),
+          pass_type: passType || 'visitor',
+          status: 'active',
+          visit_date: formatDate(formData.fromDate),
+          visit_time: startDateTime,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          expiry_time: endDateTime,
+          visit_end_date: formatDate(formData.toDate),
+          qr_code: '', // Will be populated with actual QR data
+        }
+      ]).select().single();
+
+      // 🔒 STEP 4: Only proceed to QR generation if database save was successful
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        Alert.alert(
+          'Database Error', 
+          'Failed to save visitor pass to database. QR code cannot be generated without saving the data first. Please try again.',
+          [{ text: 'OK', style: 'default' }]
+        );
+        return;
+      }
+
+      // 🔒 STEP 5: Verify data was actually saved
+      if (!data || !data.id) {
+        console.error('❌ No data returned from database');
+        Alert.alert(
+          'Save Error', 
+          'Visitor pass was not properly saved. QR code cannot be generated. Please try again.',
+          [{ text: 'OK', style: 'default' }]
+        );
+        return;
+      }
+
+      console.log('✅ Visitor pass saved successfully with ID:', data.id);
+
+      // 🔒 STEP 6: Generate QR code ONLY after successful database save
+      const qrData = {
+        id: data.id,
+        passType: passType || 'visitor',
+        visitorName: formData.name.trim(),
+        purpose: formData.purpose.trim(),
+        fromDate: formatDate(formData.fromDate),
+        toDate: formatDate(formData.toDate),
+        fromTime: formatTime(formData.fromTime),
+        toTime: formatTime(formData.toTime),
+        fromDateTime: startDateTime,
+        toDateTime: endDateTime,
+        generatedAt: new Date().toISOString(),
+        dbRecordId: data.id, // Include database record ID for verification
+      };
+
+      console.log('🎯 Navigating to QR generation with validated data...');
+
+      // 🔒 STEP 7: Navigate to QR screen with complete, validated data
+      router.push({
+        pathname: '/(tabs)/visitor-qr',
+        params: qrData
+      });
+
+    } catch (error) {
+      console.error('❌ Error in handleSubmit:', error);
+      Alert.alert(
+        'Submission Error', 
+        'An error occurred while processing your registration. QR code cannot be generated. Please try again.',
+        [{ text: 'OK', style: 'default' }]
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -267,31 +413,67 @@ export default function VisitorRegistrationScreen() {
     
     switch (type) {
       case 'fromDate':
+        // From date cannot be in the past
         return now;
+        
       case 'toDate':
+        // To date cannot be before from date
         return formData.fromDate || now;
+        
       case 'fromTime':
+        if (!formData.fromDate) {
+          return now; // Fallback, though this shouldn't happen due to validation
+        }
+        
         // If from date is today, minimum time is current time
-        if (formData.fromDate && dayjs(formData.fromDate).isSame(dayjs(), 'day')) {
+        if (dayjs(formData.fromDate).isSame(dayjs(), 'day')) {
           return now;
         }
-        // If from date is in future, any time is allowed
-        return new Date(2000, 0, 1, 0, 0); // Arbitrary early time
+        
+        // If from date is in future, any time is allowed (start from midnight)
+        const fromDateMidnight = new Date(formData.fromDate);
+        fromDateMidnight.setHours(0, 0, 0, 0);
+        return fromDateMidnight;
+        
       case 'toTime':
+        if (!formData.toDate) {
+          return now; // Fallback, though this shouldn't happen due to validation
+        }
+        
         // If to date is same as from date and from time is selected
-        if (formData.toDate && formData.fromDate && formData.fromTime &&
+        if (formData.fromDate && formData.fromTime &&
             dayjs(formData.toDate).isSame(dayjs(formData.fromDate), 'day')) {
-          // Minimum to time should be after from time
+          // Minimum to time should be at least 15 minutes after from time
           const minTime = new Date(formData.fromTime);
-          minTime.setMinutes(minTime.getMinutes() + 1); // At least 1 minute after
+          minTime.setMinutes(minTime.getMinutes() + 15);
           return minTime;
         }
-        // If to date is today, minimum time is current time
-        if (formData.toDate && dayjs(formData.toDate).isSame(dayjs(), 'day')) {
+        
+        // If to date is different from from date but from time exists
+        if (formData.fromTime && formData.fromDate &&
+            dayjs(formData.toDate).isAfter(dayjs(formData.fromDate), 'day')) {
+          // For future dates, start from midnight but ensure it's after from time
+          const toDateMidnight = new Date(formData.toDate);
+          toDateMidnight.setHours(0, 0, 0, 0);
+          return toDateMidnight;
+        }
+        
+        // If to date is today, minimum time is current time or after from time
+        if (dayjs(formData.toDate).isSame(dayjs(), 'day')) {
+          if (formData.fromTime && dayjs(formData.toDate).isSame(dayjs(formData.fromDate), 'day')) {
+            // Same day as from date, use from time + 15 minutes
+            const minTime = new Date(formData.fromTime);
+            minTime.setMinutes(minTime.getMinutes() + 15);
+            return minTime > now ? minTime : now;
+          }
           return now;
         }
-        // If to date is in future, any time is allowed
-        return new Date(2000, 0, 1, 0, 0); // Arbitrary early time
+        
+        // If to date is in future, start from midnight
+        const toDateMidnight = new Date(formData.toDate);
+        toDateMidnight.setHours(0, 0, 0, 0);
+        return toDateMidnight;
+        
       default:
         return now;
     }
@@ -304,7 +486,7 @@ export default function VisitorRegistrationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={passType === 'vip' ? ['#047857', '#10B981'] : ['#125E8A', '#89AAE6']}
+        colors={passType === 'vip' ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -321,7 +503,18 @@ export default function VisitorRegistrationScreen() {
         </Text>
       </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView 
+            style={styles.content} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
         <View style={styles.formSection}>
           <Text style={styles.sectionLabel}>
             {passType === 'vip' ? 'VIP Guest' : 'Visitor'} Details
@@ -329,13 +522,30 @@ export default function VisitorRegistrationScreen() {
 
           {/* Visitor Name */}
           <View style={styles.inputContainer}>
-            <User size={20} color={passType === 'vip' ? '#047857' : '#89AAE6'} />
+            <User size={20} color={passType === 'vip' ? '#047857' : '#D97706'} />
             <TextInput
               style={styles.input}
               placeholder={`${passType === 'vip' ? 'VIP Guest' : 'Visitor'} Full Name *`}
               value={formData.name}
               onChangeText={(text) => setFormData({ ...formData, name: text })}
               placeholderTextColor="#666"
+              returnKeyType="next"
+              blurOnSubmit={false}
+            />
+          </View>
+
+          {/* Phone Number */}
+          <View style={styles.inputContainer}>
+            <FileText size={20} color={passType === 'vip' ? '#047857' : '#D97706'} />
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number *"
+              value={formData.phoneNumber}
+              onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
+              keyboardType="phone-pad"
+              placeholderTextColor="#666"
+              returnKeyType="done"
+              maxLength={10}
             />
           </View>
 
@@ -346,7 +556,7 @@ export default function VisitorRegistrationScreen() {
               style={styles.pickerContainer}
               onPress={() => setShowPurposePicker(!showPurposePicker)}
             >
-              <FileText size={20} color={passType === 'vip' ? '#047857' : '#89AAE6'} />
+              <FileText size={20} color={passType === 'vip' ? '#047857' : '#D97706'} />
               <Text style={[styles.pickerText, !formData.purpose && styles.placeholderText]}>
                 {formData.purpose || 'Select purpose of visit'}
               </Text>
@@ -364,7 +574,7 @@ export default function VisitorRegistrationScreen() {
                 style={styles.dateTimeContainer}
                 onPress={() => showDateTimePicker('fromDate')}
               >
-                <Calendar size={20} color={passType === 'vip' ? '#047857' : '#89AAE6'} />
+                <Calendar size={20} color={passType === 'vip' ? '#047857' : '#D97706'} />
                 <Text style={[styles.dateTimeText, !formData.fromDate && styles.placeholderText]}>
                   {formatDate(formData.fromDate) || 'Select date'}
                 </Text>
@@ -377,7 +587,7 @@ export default function VisitorRegistrationScreen() {
                 style={styles.dateTimeContainer}
                 onPress={() => showDateTimePicker('toDate')}
               >
-                <Calendar size={20} color={passType === 'vip' ? '#047857' : '#89AAE6'} />
+                <Calendar size={20} color={passType === 'vip' ? '#047857' : '#D97706'} />
                 <Text style={[styles.dateTimeText, !formData.toDate && styles.placeholderText]}>
                   {formatDate(formData.toDate) || 'Select date'}
                 </Text>
@@ -400,7 +610,7 @@ export default function VisitorRegistrationScreen() {
                 <Clock size={20} color={
                   !formData.fromDate 
                     ? '#ccc' 
-                    : passType === 'vip' ? '#047857' : '#89AAE6'
+                    : passType === 'vip' ? '#047857' : '#D97706'
                 } />
                 <Text style={[
                   styles.dateTimeText,
@@ -417,20 +627,20 @@ export default function VisitorRegistrationScreen() {
               <TouchableOpacity
                 style={[
                   styles.dateTimeContainer,
-                  !formData.toDate && styles.disabledContainer,
+                  (!formData.toDate || !formData.fromTime) && styles.disabledContainer,
                 ]}
                 onPress={() => showDateTimePicker('toTime')}
-                disabled={!formData.toDate}
+                disabled={!formData.toDate || !formData.fromTime}
               >
                 <Clock size={20} color={
-                  !formData.toDate 
+                  (!formData.toDate || !formData.fromTime)
                     ? '#ccc' 
-                    : passType === 'vip' ? '#047857' : '#89AAE6'
+                    : passType === 'vip' ? '#047857' : '#D97706'
                 } />
                 <Text style={[
                   styles.dateTimeText,
                   !formData.toTime && styles.placeholderText,
-                  !formData.toDate && styles.disabledText,
+                  (!formData.toDate || !formData.fromTime) && styles.disabledText,
                 ]}>
                   {formatTime(formData.toTime) || 'Select time'}
                 </Text>
@@ -444,10 +654,13 @@ export default function VisitorRegistrationScreen() {
               • To Date must be greater than or equal to From Date
             </Text>
             <Text style={styles.validationText}>
-              • If dates are the same, To Time must be after From Time
+              • To Time must be selected after From Time to ensure positive duration
             </Text>
             <Text style={styles.validationText}>
-              • Time selection is available only after selecting the corresponding date
+              • Minimum visit duration is 15 minutes (zero or negative duration not allowed)
+            </Text>
+            <Text style={styles.validationText}>
+              • Time selection requires corresponding date to be selected first
             </Text>
             <Text style={styles.validationText}>
               • Times are automatically combined with their respective dates
@@ -462,20 +675,70 @@ export default function VisitorRegistrationScreen() {
                 End: {formatDateTime(formData.toTime)}
               </Text>
             )}
+            {formData.fromTime && formData.toTime && (() => {
+              const durationMinutes = dayjs(formData.toTime).diff(dayjs(formData.fromTime), 'minutes');
+              const isValidDuration = durationMinutes >= 15;
+              const displayDuration = Math.max(0, durationMinutes);
+              
+              // Format duration in a more readable way
+              const formatDuration = (minutes: number) => {
+                if (minutes < 60) {
+                  return `${minutes} minutes`;
+                } else {
+                  const hours = Math.floor(minutes / 60);
+                  const remainingMinutes = minutes % 60;
+                  return remainingMinutes > 0 
+                    ? `${hours}h ${remainingMinutes}m` 
+                    : `${hours} hour${hours > 1 ? 's' : ''}`;
+                }
+              };
+              
+              let warningText = '';
+              if (durationMinutes <= 0) {
+                warningText = ' ⚠️ Invalid: End time must be after start time';
+              } else if (durationMinutes < 15) {
+                warningText = ' ⚠️ Minimum 15 minutes required';
+              }
+              
+              return (
+                <Text style={[
+                  styles.validationText, 
+                  { 
+                    fontWeight: '600', 
+                    color: isValidDuration && durationMinutes > 0 ? '#047857' : '#DC2626' 
+                  }
+                ]}>
+                  Duration: {formatDuration(displayDuration)}{warningText}
+                </Text>
+              );
+            })()}
           </View>
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <TouchableOpacity 
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]} 
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
           <LinearGradient
-            colors={passType === 'vip' ? ['#047857', '#10B981'] : ['#125E8A', '#89AAE6']}
+            colors={
+              isSubmitting 
+                ? ['#9CA3AF', '#6B7280'] 
+                : passType === 'vip' ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']
+            }
             style={styles.submitButtonGradient}
           >
             <Text style={styles.submitButtonText}>
-              Generate {passType === 'vip' ? 'VIP' : 'Visitor'} Pass
+              {isSubmitting 
+                ? 'Generating Pass...' 
+                : `Generate ${passType === 'vip' ? 'VIP' : 'Visitor'} Pass`
+              }
             </Text>
           </LinearGradient>
         </TouchableOpacity>
-      </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
 
       {/* Date/Time Picker */}
       {showDatePicker.visible && (
@@ -518,7 +781,7 @@ export default function VisitorRegistrationScreen() {
                 >
                   <Text style={styles.purposeOptionText}>{purpose}</Text>
                   {formData.purpose === purpose && (
-                    <Check size={16} color={passType === 'vip' ? '#047857' : '#125E8A'} />
+                    <Check size={16} color={passType === 'vip' ? '#047857' : '#D97706'} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -534,6 +797,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   header: {
     paddingVertical: 20,
@@ -563,7 +829,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 40,
   },
   formSection: {
     backgroundColor: '#FFFFFF',
@@ -579,7 +848,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#125E8A',
+    color: '#D97706',
     marginBottom: 20,
   },
   inputContainer: {
@@ -602,7 +871,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#125E8A',
+    color: '#D97706',
     marginBottom: 10,
   },
   pickerWrapper: {
@@ -650,7 +919,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#125E8A',
+    color: '#D97706',
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -724,6 +993,9 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginBottom: 30,
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
   submitButtonGradient: {
     flexDirection: 'row',
