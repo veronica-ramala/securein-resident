@@ -18,9 +18,25 @@ import {
   Check,
 } from 'lucide-react-native';
 import Svg, { Rect, Circle } from 'react-native-svg';
+import QRCodeSVG from 'react-native-qrcode-svg';
 
 // Enhanced QR Code Component
-const QRCode = ({ size = 200, passType = 'visitor', data = {} }) => {
+type QRCodeProps = {
+  size?: number;
+  passType?: string;
+  data: {
+    dbRecordId?: string;
+    visitorName?: string;
+    purpose?: string;
+    fromDate?: string;
+    toDate?: string;
+    fromTime?: string;
+    toTime?: string;
+    passType?: string;
+    generatedAt?: string;
+  };
+};
+const QRCode = ({ size = 200, passType = 'visitor', data }: QRCodeProps) => {
   const isVIP = passType === 'vip';
   
   return (
@@ -30,12 +46,12 @@ const QRCode = ({ size = 200, passType = 'visitor', data = {} }) => {
         width: size + 40, 
         height: size + 80,
         backgroundColor: isVIP ? '#ECFDF5' : '#FEF9C3',
-        borderColor: isVIP ? '#10B981' : '#EAB308',
+        borderColor: isVIP ? '#10B981' : '#047857',
       }
     ]}>
       <Text style={[
         styles.qrTitle,
-        { color: isVIP ? '#047857' : '#854D0E' }
+        { color: isVIP ? '#047857' : '#047857' }
       ]}>
         {isVIP ? 'VIP PASS' : 'VISITOR PASS'}
       </Text>
@@ -51,35 +67,23 @@ const QRCode = ({ size = 200, passType = 'visitor', data = {} }) => {
         borderRadius: 8,
         marginVertical: 10,
       }}>
-        <Svg width={size * 0.8} height={size * 0.8} viewBox="0 0 100 100">
-          {/* Enhanced QR code pattern */}
-          <Rect x="10" y="10" width="80" height="80" fill="white" />
-          <Rect x="20" y="20" width="20" height="20" fill="black" />
-          <Rect x="60" y="20" width="20" height="20" fill="black" />
-          <Rect x="20" y="60" width="20" height="20" fill="black" />
-          {isVIP ? (
-            <>
-              <Rect x="45" y="45" width="35" height="35" fill="black" />
-              <Circle cx="62.5" cy="62.5" r="10" fill="white" />
-              <Rect x="30" y="30" width="8" height="8" fill="black" />
-              <Rect x="70" y="30" width="8" height="8" fill="black" />
-              <Rect x="30" y="70" width="8" height="8" fill="black" />
-            </>
-          ) : (
-            <>
-              <Rect x="50" y="50" width="30" height="30" fill="black" />
-              <Rect x="30" y="30" width="10" height="10" fill="black" />
-              <Rect x="70" y="70" width="10" height="10" fill="black" />
-              <Rect x="30" y="50" width="10" height="10" fill="black" />
-              <Rect x="50" y="30" width="10" height="10" fill="black" />
-            </>
-          )}
-        </Svg>
+        <QRCodeSVG
+          value={JSON.stringify({
+            id: data.dbRecordId,
+            name: data.visitorName,
+            purpose: data.purpose,
+            from: `${data.fromDate} ${data.fromTime}`,
+            to: `${data.toDate} ${data.toTime}`,
+            passType: data.passType,
+            generatedAt: data.generatedAt,
+          })}
+          size={size * 0.8}
+        />
       </View>
       
       <Text style={[
         styles.qrSubtitle,
-        { color: isVIP ? '#047857' : '#854D0E' }
+        { color: isVIP ? '#047857' : '#047857' }
       ]}>
         Scan for Entry/Exit
       </Text>
@@ -194,7 +198,7 @@ export default function VisitorQRScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={isVIP ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
+        colors={isVIP ? ['#047857', '#10B981'] : ['#047857', '#10B981']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -218,7 +222,7 @@ export default function VisitorQRScreen() {
             styles.successIcon,
             { backgroundColor: isVIP ? '#ECFDF5' : '#FEF3C7' }
           ]}>
-            <Check size={40} color={isVIP ? '#10B981' : '#F59E0B'} />
+            <Check size={40} color={isVIP ? '#10B981' : '#047857'} />
           </View>
           <Text style={styles.successTitle}>Pass Generated Successfully!</Text>
           <Text style={styles.successSubtitle}>
@@ -279,7 +283,7 @@ export default function VisitorQRScreen() {
         <View style={styles.actionsSection}>
           <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
             <LinearGradient
-              colors={isVIP ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
+              colors={isVIP ? ['#047857', '#10B981'] : ['#047857', '#10B981']}
               style={styles.actionButtonGradient}
             >
               <Share2 size={20} color="#FFFFFF" />
@@ -288,10 +292,10 @@ export default function VisitorQRScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton} onPress={handleDownload}>
-            <Download size={20} color={isVIP ? '#047857' : '#D97706'} />
+            <Download size={20} color={isVIP ? '#047857' : '#047857'} />
             <Text style={[
               styles.secondaryButtonText,
-              { color: isVIP ? '#047857' : '#D97706' }
+              { color: isVIP ? '#047857' : '#047857' }
             ]}>
               Download QR
             </Text>
@@ -371,7 +375,7 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#D97706',
+    color: '#10B981',
     marginBottom: 5,
     textAlign: 'center',
   },
@@ -415,7 +419,7 @@ const styles = StyleSheet.create({
   detailsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#D97706',
+    color: '#10B981',
     marginBottom: 15,
   },
   detailRow: {
@@ -485,17 +489,17 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: '#10B981',
   },
   instructionsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#92400E',
+    color: '#10B981',
     marginBottom: 10,
   },
   instructionsText: {
     fontSize: 14,
-    color: '#92400E',
+    color: '#10B981',
     marginBottom: 5,
     lineHeight: 18,
   },
