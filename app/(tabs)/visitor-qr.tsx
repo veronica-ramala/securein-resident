@@ -232,7 +232,7 @@ export default function VisitorQRScreen() {
       // Show success message
       Alert.alert(
         'Success!',
-        `${params.passType?.toUpperCase() || 'Visitor'} pass QR code has been saved to your photo library in the "VisitorPasses" album.`,
+        `Complete ${params.passType?.toUpperCase() || 'Visitor'} pass with QR code and details has been saved to your photo library in the "VisitorPasses" album.`,
         [{ text: 'OK' }]
       );
 
@@ -289,15 +289,87 @@ export default function VisitorQRScreen() {
         </View>
 
         <View style={styles.qrSection}>
-          <View ref={qrViewRef} style={styles.qrCaptureContainer}>
-            <QRCode 
-              size={220} 
-              passType={params.passType} 
-              data={params}
-            />
+          <View ref={qrViewRef} style={styles.fullPassContainer}>
+            {/* Pass Header */}
+            <View style={[
+              styles.passHeader,
+              { backgroundColor: isVIP ? '#047857' : '#047857' }
+            ]}>
+              <Text style={styles.passHeaderTitle}>
+                {isVIP ? 'VIP ACCESS PASS' : 'VISITOR ACCESS PASS'}
+              </Text>
+              <Text style={styles.passHeaderSubtitle}>
+                SECUREIN SYSTEM
+              </Text>
+            </View>
+
+            {/* QR Code Section */}
+            <View style={styles.qrCodeSection}>
+              <QRCode 
+                size={200} 
+                passType={params.passType} 
+                data={params}
+              />
+            </View>
+
+            {/* Pass Details Section */}
+            <View style={styles.passDetailsSection}>
+              <Text style={styles.passDetailsTitle}>PASS DETAILS</Text>
+              
+              <View style={styles.passDetailRow}>
+                <Text style={styles.passDetailLabel}>NAME:</Text>
+                <Text style={styles.passDetailValue}>{params.visitorName}</Text>
+              </View>
+              
+              <View style={styles.passDetailRow}>
+                <Text style={styles.passDetailLabel}>PURPOSE:</Text>
+                <Text style={styles.passDetailValue}>{params.purpose}</Text>
+              </View>
+              
+              <View style={styles.passDetailRow}>
+                <Text style={styles.passDetailLabel}>VALID FROM:</Text>
+                <Text style={styles.passDetailValue}>{params.fromDate} {params.fromTime}</Text>
+              </View>
+              
+              <View style={styles.passDetailRow}>
+                <Text style={styles.passDetailLabel}>VALID UNTIL:</Text>
+                <Text style={styles.passDetailValue}>{params.toDate} {params.toTime}</Text>
+              </View>
+
+              {params.dbRecordId && (
+                <View style={styles.passDetailRow}>
+                  <Text style={styles.passDetailLabel}>PASS ID:</Text>
+                  <Text style={[styles.passDetailValue, { fontSize: 11 }]}>
+                    #{params.dbRecordId}
+                  </Text>
+                </View>
+              )}
+
+              {params.generatedAt && (
+                <View style={styles.passDetailRow}>
+                  <Text style={styles.passDetailLabel}>GENERATED:</Text>
+                  <Text style={[styles.passDetailValue, { fontSize: 11 }]}>
+                    {new Date(params.generatedAt).toLocaleString()}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Pass Footer */}
+            <View style={styles.passFooter}>
+              <Text style={styles.passFooterText}>
+                Show this pass to security • Valid for specified dates only
+              </Text>
+              {isVIP && (
+                <Text style={[styles.passFooterText, { color: '#047857', fontWeight: 'bold' }]}>
+                  ★ VIP PRIORITY ACCESS ★
+                </Text>
+              )}
+            </View>
           </View>
         </View>
 
+        {/* Separate details section for screen display (not captured) */}
         <View style={styles.detailsSection}>
           <Text style={styles.detailsTitle}>Pass Details</Text>
           
@@ -361,7 +433,7 @@ export default function VisitorQRScreen() {
               styles.secondaryButtonText,
               { color: isSaving ? '#999' : (isVIP ? '#047857' : '#047857') }
             ]}>
-              {isSaving ? 'Saving...' : 'Save to Gallery'}
+              {isSaving ? 'Saving...' : 'Save Complete Pass'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -461,6 +533,92 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  fullPassContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    width: 320,
+    minHeight: 500,
+  },
+  passHeader: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  passHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
+  passHeaderSubtitle: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginTop: 4,
+    opacity: 0.9,
+    letterSpacing: 2,
+  },
+  qrCodeSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    backgroundColor: '#FAFAFA',
+  },
+  passDetailsSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#FFFFFF',
+  },
+  passDetailsTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#047857',
+    marginBottom: 12,
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
+  passDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    paddingVertical: 2,
+  },
+  passDetailLabel: {
+    fontSize: 11,
+    color: '#666',
+    fontWeight: 'bold',
+    flex: 1,
+    letterSpacing: 0.5,
+  },
+  passDetailValue: {
+    fontSize: 11,
+    color: '#000',
+    fontWeight: '600',
+    flex: 2,
+    textAlign: 'right',
+    flexWrap: 'wrap',
+  },
+  passFooter: {
+    backgroundColor: '#F8F9FA',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  passFooterText: {
+    fontSize: 10,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 14,
   },
   qrCodeContainer: {
     alignItems: 'center',
