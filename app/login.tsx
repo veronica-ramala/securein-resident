@@ -19,7 +19,10 @@ import { useLocalization } from '../context/LocalizationContext';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useUserContext();
+  const userContext = useUserContext();
+  const login = userContext?.login || (() => {
+    console.warn('Login function not available from UserContext');
+  });
   const { t } = useLocalization();
   
   // State for form fields

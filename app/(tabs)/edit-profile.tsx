@@ -23,7 +23,21 @@ import { useSmartNavigation } from '@/hooks/useBackHandler';
 export default function EditProfileScreen() {
   const router = useRouter();
   const { navigateBack } = useSmartNavigation();
-  const { profileData, updateProfileData } = useUserContext();
+  const userContext = useUserContext();
+  const profileData = userContext?.profileData || {
+    name: '',
+    phone: '',
+    profession: '',
+    email: '',
+    address: '',
+    profilePhoto: null,
+    familyMembers: [],
+    vehicles: [],
+    pets: []
+  };
+  const updateProfileData = userContext?.updateProfileData || (() => {
+    console.warn('updateProfileData function not available from UserContext');
+  });
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(profileData.profilePhoto);
   

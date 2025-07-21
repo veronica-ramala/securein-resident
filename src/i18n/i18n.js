@@ -5,18 +5,23 @@ import { translations } from '../../localization/translations';
 
 // Get device language and check if we support it
 const getDeviceLanguage = () => {
-  const deviceLanguage = Localization.locale;
-  
-  // Extract language code (e.g., 'en-US' -> 'en', 'hi-IN' -> 'hi')
-  const languageCode = deviceLanguage.split('-')[0];
-  
-  // Check if we have translations for this language
-  if (translations[languageCode]) {
-    return languageCode;
+  try {
+    const deviceLanguage = Localization.locale || 'en-US';
+    
+    // Extract language code (e.g., 'en-US' -> 'en', 'hi-IN' -> 'hi')
+    const languageCode = deviceLanguage.split('-')[0];
+    
+    // Check if we have translations for this language
+    if (translations[languageCode]) {
+      return languageCode;
+    }
+    
+    // Fallback to English
+    return 'en';
+  } catch (error) {
+    console.warn('Error getting device language:', error);
+    return 'en';
   }
-  
-  // Fallback to English
-  return 'en';
 };
 
 i18n
@@ -40,6 +45,9 @@ i18n
     // Enable namespace support for nested translations
     ns: ['translation'],
     defaultNS: 'translation',
+  })
+  .catch((error) => {
+    console.warn('i18n initialization error:', error);
   });
 
 export default i18n;

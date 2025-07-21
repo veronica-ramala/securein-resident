@@ -9,7 +9,16 @@ import { useLocalization } from '../../context/LocalizationContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profileData, logout } = useUserContext();
+  const userContext = useUserContext();
+  const profileData = userContext?.profileData || {
+    name: '',
+    profession: '',
+    address: '',
+    profilePhoto: null
+  };
+  const logout = userContext?.logout || (() => {
+    console.warn('Logout function not available from UserContext');
+  });
   const { t, currentLanguage, setLanguage, availableLanguages } = useLocalization();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
@@ -98,16 +107,16 @@ export default function ProfileScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            {profileData.profilePhoto ? (
+            {profileData?.profilePhoto ? ( // Add optional chaining
               <Image source={{ uri: profileData.profilePhoto }} style={styles.profileImage} />
             ) : (
               renderIcon(User, 40, "#0077B6")
             )}
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profileData.name}</Text>
-            <Text style={styles.profileProfession}>{profileData.profession}</Text>
-            <Text style={styles.profileUnit}>{profileData.address.split(',')[0]}</Text>
+            <Text style={styles.profileName}>{profileData?.name ?? ''}</Text>
+            <Text style={styles.profileProfession}>{profileData?.profession ?? ''}</Text>
+            <Text style={styles.profileUnit}>{profileData?.address ? profileData.address.split(',')[0] : ''}</Text>
             <Text style={styles.profileMember}>{t('profile.memberSince')}</Text>
           </View>
         </View>
@@ -186,7 +195,7 @@ export default function ProfileScreen() {
         <TouchableOpacity 
           style={styles.logoutButton}
           onPress={() => {
-            logout();
+            logout(); // logout is guaranteed to be a function now
             router.replace('/login');
           }}
         >

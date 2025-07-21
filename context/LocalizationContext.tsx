@@ -19,7 +19,14 @@ const LocalizationContext = createContext<LocalizationContextType | undefined>(u
 
 export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t: i18nT, i18n: i18nInstance } = useTranslation();
-  const [currentLanguage, setCurrentLanguage] = useState(i18nInstance.language || 'en');
+  const [currentLanguage, setCurrentLanguage] = useState(() => {
+    try {
+      return i18nInstance?.language || 'en';
+    } catch (error) {
+      console.warn('Error getting i18n language:', error);
+      return 'en';
+    }
+  });
 
   const availableLanguages = [
     { code: 'en', name: 'English', nativeName: 'English' },
@@ -69,7 +76,12 @@ export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const t = (key: string, options?: any): string => {
-    return i18nT(key, options);
+    try {
+      return i18nT(key, options) || key;
+    } catch (error) {
+      console.warn('Translation error for key:', key, error);
+      return key;
+    }
   };
 
   const isRTL = currentLanguage === 'ar'; // Arabic is RTL
@@ -90,7 +102,15 @@ export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export const useLocalization = () => {
   const context = useContext(LocalizationContext);
   if (context === undefined) {
-    throw new Error('useLocalization must be used within a LocalizationProvider');
+    console.warn('useLocalization must be used within a LocalizationProvider');
+    // Return a fallback context
+    return {
+      currentLanguage: 'en',
+      setLanguage: async () => {},
+      t: (key: string) => key,
+      isRTL: false,
+      availableLanguages: [{ code: 'en', name: 'English', nativeName: 'English' }]
+    };
   }
   return context;
 };

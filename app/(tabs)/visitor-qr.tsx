@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,9 @@ import {
 } from 'lucide-react-native';
 import Svg, { Rect, Circle } from 'react-native-svg';
 import QRCodeSVG from 'react-native-qrcode-svg';
+import { captureRef } from 'react-native-view-shot';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 
 // Enhanced QR Code Component
 type QRCodeProps = {
@@ -93,6 +96,8 @@ const QRCode = ({ size = 200, passType = 'visitor', data }: QRCodeProps) => {
 
 export default function VisitorQRScreen() {
   const router = useRouter();
+  const qrViewRef = useRef<View | null>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
   const params = useLocalSearchParams<{
     passType: string;
     visitorName: string;
@@ -182,12 +187,65 @@ export default function VisitorQRScreen() {
     }
   };
 
-  const handleDownload = () => {
-    Alert.alert(
-      'Download Pass',
-      'QR code has been saved to your device gallery.',
-      [{ text: 'OK' }]
-    );
+  const handleSave = async () => {
+    if (isSaving) return; // Prevent multiple saves
+    
+    setIsSaving(true);
+    try {
+      // Request media library permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please grant permission to access your photo library to save the QR code.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Capture the QR code view as PNG (highest quality)
+      const uri = await captureRef(qrViewRef, {
+        format: 'png',
+        quality: 1.0, // Highest quality
+        result: 'tmpfile',
+      });
+
+      // Create filename with timestamp and visitor name
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const visitorName = params.visitorName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Visitor';
+      const filename = `${params.passType?.toUpperCase()}_Pass_${visitorName}_${timestamp}.png`;
+
+      // Save to device's photo library
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      
+      // Create or get the "VisitorPasses" album
+      let album = await MediaLibrary.getAlbumAsync('VisitorPasses');
+      if (album == null) {
+        album = await MediaLibrary.createAlbumAsync('VisitorPasses', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      }
+
+      // Clean up temporary file
+      await FileSystem.deleteAsync(uri, { idempotent: true });
+
+      // Show success message
+      Alert.alert(
+        'Success!',
+        `${params.passType?.toUpperCase() || 'Visitor'} pass QR code has been saved to your photo library in the "VisitorPasses" album.`,
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      console.error('Error saving QR code:', error);
+      Alert.alert(
+        'Save Failed',
+        'Failed to save the QR code to your photo library. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDone = () => {
@@ -231,11 +289,13 @@ export default function VisitorQRScreen() {
         </View>
 
         <View style={styles.qrSection}>
-          <QRCode 
-            size={220} 
-            passType={params.passType} 
-            data={params}
-          />
+          <View ref={qrViewRef} style={styles.qrCaptureContainer}>
+            <QRCode 
+              size={220} 
+              passType={params.passType} 
+              data={params}
+            />
+          </View>
         </View>
 
         <View style={styles.detailsSection}>
@@ -291,13 +351,17 @@ export default function VisitorQRScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleDownload}>
-            <Download size={20} color={isVIP ? '#047857' : '#047857'} />
+          <TouchableOpacity 
+            style={[styles.secondaryButton, isSaving && styles.disabledButton]} 
+            onPress={handleSave}
+            disabled={isSaving}
+          >
+            <Download size={20} color={isSaving ? '#999' : (isVIP ? '#047857' : '#047857')} />
             <Text style={[
               styles.secondaryButtonText,
-              { color: isVIP ? '#047857' : '#047857' }
+              { color: isSaving ? '#999' : (isVIP ? '#047857' : '#047857') }
             ]}>
-              Download QR
+              {isSaving ? 'Saving...' : 'Save to Gallery'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -388,6 +452,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
+  qrCaptureContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   qrCodeContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -473,6 +547,9 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   doneButton: {
     alignItems: 'center',

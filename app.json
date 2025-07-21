@@ -19,7 +19,15 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-dev-client",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -32,7 +40,13 @@
     },
     "android": {
       "package": "com.veronica_ramala.secureinapp",
-      "softwareKeyboardLayoutMode": "adjustPan"
+      "softwareKeyboardLayoutMode": "adjustPan",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     }
   }
 }

@@ -6,7 +6,7 @@ const initialProfileData = {
   phone: '555-123-4567',
   profession: 'Doctor',
   email: 'john.doe@example.com',
-  address: 'Unit A-101, SecureIn Community',
+  address: 'Unit A-101, SecureIn Community', // Ensure address is always a string
   profilePhoto: null,
   familyMembers: [
     { id: '1', name: 'Jane Doe', relation: 'Spouse', phone: '555-765-4321' },
@@ -57,4 +57,11 @@ export const UserProvider = ({ children }) => {
 };
 
 // Create a custom hook to use the context
-export const useUserContext = () => useContext(UserContext);
+export const useUserContext = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    console.warn('useUserContext must be used within a UserProvider');
+    return null;
+  }
+  return context;
+};
