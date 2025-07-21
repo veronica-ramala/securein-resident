@@ -56,7 +56,6 @@ const QRCode = ({ size = 200, passType = 'visitor' }) => {
 export default function GatePage() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedPass, setSelectedPass] = useState<'visitor' | 'vip' | null>(null);
   
   // Visitor activity data
   const visitorActivity = [
@@ -71,7 +70,6 @@ export default function GatePage() {
   };
 
   const selectPass = (passType: 'visitor' | 'vip') => {
-    setSelectedPass(passType);
     setModalVisible(false);
     // Navigate to visitor registration form
     router.push({
@@ -96,45 +94,12 @@ export default function GatePage() {
       </LinearGradient>
 
       <ScrollView style={styles.content}>
-        {!selectedPass ? (
-          <TouchableOpacity 
-            style={styles.gateButton} 
-            onPress={openPassSelector}
-          >
-            <Text style={styles.gateButtonText}>Click to Generate Pass</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={[
-            styles.qrContainer,
-            selectedPass === 'visitor' ? styles.visitorPassContainer : styles.vipPassContainer
-          ]}>
-            <Text style={[
-              styles.passTitle,
-              selectedPass === 'visitor' ? styles.visitorPassTitle : styles.vipPassTitle
-            ]}>
-              {selectedPass === 'visitor' ? 'Visitor Pass' : 'VIP Pass'}
-            </Text>
-            <QRCode passType={selectedPass} />
-            <Text style={styles.qrInstructions}>
-              Show this QR code to the security guard at the gate for entry and exit.
-            </Text>
-            <TouchableOpacity 
-              style={[
-                styles.shareButton,
-                selectedPass === 'visitor' ? styles.visitorShareButton : styles.vipShareButton
-              ]}
-            >
-              <Share2 size={22} color="white" style={{ marginRight: 10 }} />
-              <Text style={styles.shareButtonText}>Share with {selectedPass === 'visitor' ? 'Visitor' : 'VIP Guest'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.changePassButton}
-              onPress={openPassSelector}
-            >
-              <Text style={styles.changePassText}>Change Pass Type</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <TouchableOpacity 
+          style={styles.gateButton} 
+          onPress={openPassSelector}
+        >
+          <Text style={styles.gateButtonText}>Click to Generate Pass</Text>
+        </TouchableOpacity>
 
         <View style={styles.activitySection}>
           <Text style={styles.sectionTitle}>Recent Visitor Activity</Text>

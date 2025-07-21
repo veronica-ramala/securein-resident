@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronDown,
   Check,
+  Info,
 } from 'lucide-react-native';
 
 interface VisitorFormData {
@@ -646,6 +647,14 @@ export default function VisitorRegistrationScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Info Icon for Time Instructions */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, marginBottom: 8 }}>
+            <Info size={18} color="#2563eb" />
+            <Text style={{ color: '#1e293b', fontSize: 13, marginLeft: 6, flex: 1 }}>
+              🕒 Please select a valid time slot with at least a 15-minute gap between start and end time.
+            </Text>
           </View>
 
           {/* Validation Info */}
