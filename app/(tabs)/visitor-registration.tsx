@@ -68,7 +68,6 @@ export default function VisitorRegistrationScreen() {
   const purposes = [
     'Business Meeting',
     'Personal Visit',
-    'Delivery',
     'Maintenance',
     'Guest',
     'Service Provider',
@@ -491,7 +490,10 @@ export default function VisitorRegistrationScreen() {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity 
+            onPress={() => router.push('/(tabs)/gate')} 
+            style={styles.backButton}
+          >
             <ChevronLeft size={24} color="white" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>

@@ -45,7 +45,7 @@ const QRCode = ({ size = 200, passType = 'visitor' }) => {
       <Text style={{ 
         marginTop: 8, 
         fontWeight: '600', 
-        color: isVIP ? '#2F855A' : '#854D0E'
+        color: isVIP ? '#047857' : '#D97706'
       }}>
         {isVIP ? 'VIP Pass' : 'Visitor Pass'}
       </Text>
@@ -69,13 +69,22 @@ export default function GatePage() {
     setModalVisible(true);
   };
 
-  const selectPass = (passType: 'visitor' | 'vip') => {
+  const selectPass = (passType: 'visitor' | 'vip' | 'delivery') => {
     setModalVisible(false);
-    // Navigate to visitor registration form
-    router.push({
-      pathname: '/(tabs)/visitor-registration',
-      params: { passType }
-    });
+    
+    if (passType === 'delivery') {
+      // Navigate to delivery registration form
+      router.push({
+        pathname: '/(tabs)/delivery-registration',
+        params: { passType }
+      });
+    } else {
+      // Navigate to visitor registration form
+      router.push({
+        pathname: '/(tabs)/visitor-registration',
+        params: { passType }
+      });
+    }
   };
 
   return (
@@ -159,6 +168,16 @@ export default function GatePage() {
                 <Text style={styles.passOptionDescription}>Premium access for special guests</Text>
               </View>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.passOption, styles.deliveryPassOption]}
+              onPress={() => selectPass('delivery')}
+            >
+              <View style={styles.passOptionContent}>
+                <Text style={styles.passOptionTitle}>Delivery Pass</Text>
+                <Text style={styles.passOptionDescription}>Quick access for delivery personnel</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -239,9 +258,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   visitorPassContainer: {
-    backgroundColor: '#FEF9C3', // Light yellow background
+    backgroundColor: '#FEF3C7', // Light orange/yellow background
     borderWidth: 1,
-    borderColor: '#EAB308', // Yellow border
+    borderColor: '#D97706', // Orange/yellow border
   },
   vipPassContainer: {
     backgroundColor: '#ECFDF5', // Light green background
@@ -254,7 +273,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   visitorPassTitle: {
-    color: '#854D0E', // Darker yellow
+    color: '#D97706', // Orange/yellow
   },
   vipPassTitle: {
     color: '#047857', // Darker green
@@ -282,7 +301,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   visitorShareButton: {
-    backgroundColor: '#EAB308', // Pure yellow
+    backgroundColor: '#D97706', // Orange/yellow
   },
   vipShareButton: {
     backgroundColor: '#10B981', // Green
@@ -405,12 +424,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   visitorPassOption: {
-    backgroundColor: '#FEF9C3', // Light yellow background
-    borderColor: '#EAB308', // Yellow border
+    backgroundColor: '#FEF3C7', // Light orange/yellow background
+    borderColor: '#D97706', // Orange/yellow border
   },
   vipPassOption: {
     backgroundColor: '#ECFDF5', // Light green background
     borderColor: '#10B981', // Green border
+  },
+  deliveryPassOption: {
+    backgroundColor: '#FFF7ED', // Light orange background
+    borderColor: '#F97316', // Orange border
   },
   passOptionContent: {
     flexDirection: 'column',

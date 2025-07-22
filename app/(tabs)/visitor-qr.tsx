@@ -49,12 +49,12 @@ const QRCode = ({ size = 200, passType = 'visitor', data }: QRCodeProps) => {
         width: size + 40, 
         height: size + 80,
         backgroundColor: isVIP ? '#ECFDF5' : '#FEF9C3',
-        borderColor: isVIP ? '#10B981' : '#047857',
+        borderColor: isVIP ? '#10B981' : '#D97706',
       }
     ]}>
       <Text style={[
         styles.qrTitle,
-        { color: isVIP ? '#047857' : '#047857' }
+        { color: isVIP ? '#047857' : '#D97706' }
       ]}>
         {isVIP ? 'VIP PASS' : 'VISITOR PASS'}
       </Text>
@@ -86,7 +86,7 @@ const QRCode = ({ size = 200, passType = 'visitor', data }: QRCodeProps) => {
       
       <Text style={[
         styles.qrSubtitle,
-        { color: isVIP ? '#047857' : '#047857' }
+        { color: isVIP ? '#047857' : '#D97706' }
       ]}>
         Scan for Entry/Exit
       </Text>
@@ -256,7 +256,7 @@ export default function VisitorQRScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={isVIP ? ['#047857', '#10B981'] : ['#047857', '#10B981']}
+        colors={isVIP ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -280,9 +280,12 @@ export default function VisitorQRScreen() {
             styles.successIcon,
             { backgroundColor: isVIP ? '#ECFDF5' : '#FEF3C7' }
           ]}>
-            <Check size={40} color={isVIP ? '#10B981' : '#047857'} />
+            <Check size={40} color={isVIP ? '#10B981' : '#D97706'} />
           </View>
-          <Text style={styles.successTitle}>Pass Generated Successfully!</Text>
+          <Text style={[
+            styles.successTitle,
+            { color: isVIP ? '#10B981' : '#D97706' }
+          ]}>Pass Generated Successfully!</Text>
           <Text style={styles.successSubtitle}>
             Your {isVIP ? 'VIP' : 'visitor'} pass is ready to use
           </Text>
@@ -293,7 +296,7 @@ export default function VisitorQRScreen() {
             {/* Pass Header */}
             <View style={[
               styles.passHeader,
-              { backgroundColor: isVIP ? '#047857' : '#047857' }
+              { backgroundColor: isVIP ? '#047857' : '#D97706' }
             ]}>
               <Text style={styles.passHeaderTitle}>
                 {isVIP ? 'VIP ACCESS PASS' : 'VISITOR ACCESS PASS'}
@@ -314,7 +317,12 @@ export default function VisitorQRScreen() {
 
             {/* Pass Details Section */}
             <View style={styles.passDetailsSection}>
-              <Text style={styles.passDetailsTitle}>PASS DETAILS</Text>
+              <Text style={[
+                styles.passDetailsTitle,
+                { color: isVIP ? '#047857' : '#D97706' }
+              ]}>
+                {isVIP ? 'VIP GUEST DETAILS' : 'PASS DETAILS'}
+              </Text>
               
               <View style={styles.passDetailRow}>
                 <Text style={styles.passDetailLabel}>NAME:</Text>
@@ -322,12 +330,18 @@ export default function VisitorQRScreen() {
               </View>
               
               <View style={styles.passDetailRow}>
-                <Text style={styles.passDetailLabel}>PURPOSE:</Text>
+                <Text style={[
+                  styles.passDetailLabel,
+                  isVIP && { color: '#047857' }
+                ]}>{isVIP ? 'PURPOSE OF VISIT:' : 'PURPOSE:'}</Text>
                 <Text style={styles.passDetailValue}>{params.purpose}</Text>
               </View>
               
               <View style={styles.passDetailRow}>
-                <Text style={styles.passDetailLabel}>VALID FROM:</Text>
+                <Text style={[
+                  styles.passDetailLabel,
+                  isVIP && { color: '#047857' }
+                ]}>{isVIP ? 'VISIT DURATION:' : 'VALID FROM:'}</Text>
                 <Text style={styles.passDetailValue}>{params.fromDate} {params.fromTime}</Text>
               </View>
               
@@ -336,14 +350,7 @@ export default function VisitorQRScreen() {
                 <Text style={styles.passDetailValue}>{params.toDate} {params.toTime}</Text>
               </View>
 
-              {params.dbRecordId && (
-                <View style={styles.passDetailRow}>
-                  <Text style={styles.passDetailLabel}>PASS ID:</Text>
-                  <Text style={[styles.passDetailValue, { fontSize: 11 }]}>
-                    #{params.dbRecordId}
-                  </Text>
-                </View>
-              )}
+
 
               {params.generatedAt && (
                 <View style={styles.passDetailRow}>
@@ -371,7 +378,10 @@ export default function VisitorQRScreen() {
 
         {/* Separate details section for screen display (not captured) */}
         <View style={styles.detailsSection}>
-          <Text style={styles.detailsTitle}>Pass Details</Text>
+          <Text style={[
+            styles.detailsTitle,
+            { color: isVIP ? '#10B981' : '#D97706' }
+          ]}>{isVIP ? 'VIP Guest Details' : 'Pass Details'}</Text>
           
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Name:</Text>
@@ -379,12 +389,18 @@ export default function VisitorQRScreen() {
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Purpose:</Text>
+            <Text style={[
+              styles.detailLabel,
+              isVIP && { color: '#10B981' }
+            ]}>{isVIP ? 'Purpose of Visit:' : 'Purpose:'}</Text>
             <Text style={styles.detailValue}>{params.purpose}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Valid From:</Text>
+            <Text style={[
+              styles.detailLabel,
+              isVIP && { color: '#10B981' }
+            ]}>{isVIP ? 'Visit Duration:' : 'Valid From:'}</Text>
             <Text style={styles.detailValue}>{params.fromDate} {params.fromTime}</Text>
           </View>
           
@@ -415,7 +431,7 @@ export default function VisitorQRScreen() {
         <View style={styles.actionsSection}>
           <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
             <LinearGradient
-              colors={isVIP ? ['#047857', '#10B981'] : ['#047857', '#10B981']}
+              colors={isVIP ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
               style={styles.actionButtonGradient}
             >
               <Share2 size={20} color="#FFFFFF" />
@@ -428,10 +444,10 @@ export default function VisitorQRScreen() {
             onPress={handleSave}
             disabled={isSaving}
           >
-            <Download size={20} color={isSaving ? '#999' : (isVIP ? '#047857' : '#047857')} />
+            <Download size={20} color={isSaving ? '#999' : (isVIP ? '#047857' : '#D97706')} />
             <Text style={[
               styles.secondaryButtonText,
-              { color: isSaving ? '#999' : (isVIP ? '#047857' : '#047857') }
+              { color: isSaving ? '#999' : (isVIP ? '#047857' : '#D97706') }
             ]}>
               {isSaving ? 'Saving...' : 'Save Complete Pass'}
             </Text>
@@ -442,15 +458,33 @@ export default function VisitorQRScreen() {
           <Text style={styles.doneButtonText}>Done</Text>
         </TouchableOpacity>
 
-        <View style={styles.instructionsSection}>
-          <Text style={styles.instructionsTitle}>Instructions</Text>
-          <Text style={styles.instructionsText}>
+        <View style={[
+          styles.instructionsSection,
+          { 
+            backgroundColor: isVIP ? '#FEF3C7' : '#FEF3C7',
+            borderLeftColor: isVIP ? '#10B981' : '#D97706'
+          }
+        ]}>
+          <Text style={[
+            styles.instructionsTitle,
+            { color: isVIP ? '#10B981' : '#D97706' }
+          ]}>Instructions</Text>
+          <Text style={[
+            styles.instructionsText,
+            { color: isVIP ? '#10B981' : '#D97706' }
+          ]}>
             • Show this QR code to the security guard at the gate
           </Text>
-          <Text style={styles.instructionsText}>
+          <Text style={[
+            styles.instructionsText,
+            { color: isVIP ? '#10B981' : '#D97706' }
+          ]}>
             • Keep the pass accessible during your visit
           </Text>
-          <Text style={styles.instructionsText}>
+          <Text style={[
+            styles.instructionsText,
+            { color: isVIP ? '#10B981' : '#D97706' }
+          ]}>
             • The pass is valid only for the specified date and time range
           </Text>
           {isVIP && (
@@ -511,7 +545,6 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#10B981',
     marginBottom: 5,
     textAlign: 'center',
   },
@@ -579,7 +612,6 @@ const styles = StyleSheet.create({
   passDetailsTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#047857',
     marginBottom: 12,
     textAlign: 'center',
     letterSpacing: 1,
@@ -651,7 +683,6 @@ const styles = StyleSheet.create({
   detailsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#10B981',
     marginBottom: 15,
   },
   detailRow: {
@@ -720,21 +751,17 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   instructionsSection: {
-    backgroundColor: '#FEF3C7',
     borderRadius: 15,
     padding: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
   },
   instructionsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#10B981',
     marginBottom: 10,
   },
   instructionsText: {
     fontSize: 14,
-    color: '#10B981',
     marginBottom: 5,
     lineHeight: 18,
   },
