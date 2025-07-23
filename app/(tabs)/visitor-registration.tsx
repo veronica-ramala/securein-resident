@@ -20,6 +20,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
+import { useUserContext } from '../../context/UserContext';
 import {
   User,
   Calendar,
@@ -30,6 +31,32 @@ import {
   Check,
   Info,
 } from 'lucide-react-native';
+// ✅ Step 1: Extract flat number from user address
+const extractFlatNumber = (address: string): string => {
+  if (!address) return '';
+  // Match patterns like "Unit A-101" or "A-101" 
+  const match = address.match(/Unit\s+([A-Za-z0-9\-\/]+)/i);
+  if (match) return match[1];
+  // Fallback to match patterns at the beginning like "A-101"
+  const fallbackMatch = address.match(/^([A-Za-z0-9\-\/]+)/);
+  return fallbackMatch ? fallbackMatch[1] : '';
+};
+
+// ✅ Step 2: Create a React Native compatible ID generator with house/flat number
+const generateVisitorId = (flatNumber: string): string => {
+  // Generate readable date and time format: YYYYMMDD-HHMM
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+  const dateTimeString = `${year}${month}${day}-${hours}${minutes}`;
+  
+  // Format: FLAT-YYYYMMDD-HHMM (e.g., A-101-20250723-1639)
+  return flatNumber ? `${flatNumber}-${dateTimeString}` : `GUEST-${dateTimeString}`;
+};
 
 interface VisitorFormData {
   name: string;
@@ -44,6 +71,7 @@ interface VisitorFormData {
 export default function VisitorRegistrationScreen() {
   const router = useRouter();
   const { passType } = useLocalSearchParams<{ passType: string }>();
+  const userContext = useUserContext();
   
   const [formData, setFormData] = useState<VisitorFormData>({
     name: '',
@@ -321,6 +349,7 @@ export default function VisitorRegistrationScreen() {
       // 🔒 STEP 2: Format and validate data before database save
       const startDateTime = formData.fromTime!.toISOString();
       const endDateTime = formData.toTime!.toISOString();
+      const generatedAt = new Date().toISOString();
       
       // Additional data integrity check
       if (!formData.name.trim() || !formData.phoneNumber.trim() || !formData.purpose.trim()) {
@@ -328,38 +357,85 @@ export default function VisitorRegistrationScreen() {
         return;
       }
 
+      // ✅ Step 3: Get user's flat number and generate the custom visitor ID
+      const userFlatNumber = userContext?.profileData?.address 
+        ? extractFlatNumber(userContext.profileData.address)
+        : '';
+      
+      const visitorId = generateVisitorId(userFlatNumber);
+      console.log('🔍 User flat number:', userFlatNumber);
+      console.log('🔍 Generated visitor ID:', visitorId);
+
       console.log('🔄 Saving visitor pass to database...');
       
-      // 🔒 STEP 3: Save to database first - QR generation ONLY after successful save
-      const { data, error } = await supabase.from('visitor_passes').insert([
-        {
-          visitor_name: formData.name.trim(),
-          phone_number: formData.phoneNumber.trim(),
-          purpose: formData.purpose.trim(),
-          pass_type: passType || 'visitor',
-          status: 'active',
-          visit_date: formatDate(formData.fromDate),
-          visit_time: startDateTime,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          expiry_time: endDateTime,
-          visit_end_date: formatDate(formData.toDate),
-          qr_code: '', // Will be populated with actual QR data
+      // Test database connection first
+      try {
+        const { data: testData, error: testError } = await supabase.from('visitor_passes').select('*').limit(1);
+        if (testError) {
+          console.error('❌ Database connection test failed:', testError);
+          Alert.alert('Database Connection Error', `Cannot connect to database: ${testError.message}`);
+          return;
         }
-      ]).select().single();
+        console.log('✅ Database connection test successful');
+        console.log('📋 Sample data from table:', testData);
+      } catch (testErr) {
+        console.error('❌ Database connection test error:', testErr);
+        Alert.alert('Database Connection Error', 'Cannot connect to database. Please check your internet connection.');
+        return;
+      }
+      
+      // Debug: Log the data being inserted
+      const insertData = {
+        visitor_name: formData.name.trim(),
+        phone_number: formData.phoneNumber.trim(),
+        purpose: formData.purpose.trim(),
+        pass_type: passType || 'visitor',
+        status: 'active',
+        visit_date: formatDate(formData.fromDate),
+        visit_time: startDateTime,
+        created_at: generatedAt,
+        updated_at: generatedAt,
+        expiry_time: endDateTime,
+        visit_end_date: formatDate(formData.toDate),
+        qr_code: visitorId,        // Use visitor ID in QR code field
+      };
+      
+      // Validate that all required fields have values
+      const requiredFields = ['visitor_name', 'phone_number', 'purpose', 'visit_date', 'visit_time', 'expiry_time', 'qr_code'];
+      const missingFields = requiredFields.filter(field => !insertData[field as keyof typeof insertData]);
+      
+      if (missingFields.length > 0) {
+        console.error('❌ Missing required fields:', missingFields);
+        Alert.alert('Data Error', `Missing required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+      
+      console.log('🔍 Data to insert:', JSON.stringify(insertData, null, 2));
+      
+      // ✅ Step 4: Insert into Supabase with custom visitor ID
+      console.log('🚀 Attempting to insert data...');
+      const { data, error } = await supabase
+        .from('visitor_passes')
+        .insert([insertData])
+        .select()
+        .single();
+      
+      console.log('📊 Insert result - data:', data);
+      console.log('📊 Insert result - error:', error);
 
-      // 🔒 STEP 4: Only proceed to QR generation if database save was successful
+      // 🔒 STEP 5: Only proceed to QR generation if database save was successful
       if (error) {
         console.error('❌ Supabase error:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
         Alert.alert(
           'Database Error', 
-          'Failed to save visitor pass to database. QR code cannot be generated without saving the data first. Please try again.',
+          `Failed to save visitor pass to database: ${error.message || 'Unknown error'}. Please try again.`,
           [{ text: 'OK', style: 'default' }]
         );
         return;
       }
 
-      // 🔒 STEP 5: Verify data was actually saved
+      // 🔒 STEP 6: Verify data was actually saved
       if (!data || !data.id) {
         console.error('❌ No data returned from database');
         Alert.alert(
@@ -371,10 +447,12 @@ export default function VisitorRegistrationScreen() {
       }
 
       console.log('✅ Visitor pass saved successfully with ID:', data.id);
+      console.log('✅ Visitor ID for QR code:', visitorId);
 
-      // 🔒 STEP 6: Generate QR code ONLY after successful database save
+      // ✅ Step 5: Prepare data for QR screen navigation
       const qrData = {
         id: data.id,
+        visitorId: data.qr_code || visitorId, // ✅ Use the QR code from database (which contains our visitor ID)
         passType: passType || 'visitor',
         visitorName: formData.name.trim(),
         purpose: formData.purpose.trim(),
@@ -384,13 +462,13 @@ export default function VisitorRegistrationScreen() {
         toTime: formatTime(formData.toTime),
         fromDateTime: startDateTime,
         toDateTime: endDateTime,
-        generatedAt: new Date().toISOString(),
+        generatedAt: generatedAt,
         dbRecordId: data.id, // Include database record ID for verification
       };
 
       console.log('🎯 Navigating to QR generation with validated data...');
 
-      // 🔒 STEP 7: Navigate to QR screen with complete, validated data
+      // ✅ Step 6: Navigate to QR screen with complete, validated data
       router.push({
         pathname: '/(tabs)/visitor-qr',
         params: qrData

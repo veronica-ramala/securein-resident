@@ -1,3 +1,5 @@
+
+
 import React, { useRef } from 'react';
 import {
   View,
@@ -29,6 +31,7 @@ type QRCodeProps = {
   passType?: string;
   data: {
     dbRecordId?: string;
+    visitorId?: string;
     visitorName?: string;
     purpose?: string;
     fromDate?: string;
@@ -71,15 +74,7 @@ const QRCode = ({ size = 200, passType = 'visitor', data }: QRCodeProps) => {
         marginVertical: 10,
       }}>
         <QRCodeSVG
-          value={JSON.stringify({
-            id: data.dbRecordId,
-            name: data.visitorName,
-            purpose: data.purpose,
-            from: `${data.fromDate} ${data.fromTime}`,
-            to: `${data.toDate} ${data.toTime}`,
-            passType: data.passType,
-            generatedAt: data.generatedAt,
-          })}
+          value={data.visitorId || data.dbRecordId || 'VISITOR-PASS'} // ✅ Use the visitor ID first, then fallback to dbRecordId
           size={size * 0.8}
         />
       </View>
@@ -110,6 +105,7 @@ export default function VisitorQRScreen() {
     toDateTime?: string;
     dbRecordId?: string;      // <-- Added for validation and linter fix
     generatedAt?: string;     // <-- Added for validation and linter fix
+    visitorId?: string;       // <-- Added for visitor ID
   }>();
 
   // 🔒 CRITICAL: Validate that all required form data is present
