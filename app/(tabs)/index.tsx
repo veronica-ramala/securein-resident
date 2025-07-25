@@ -248,7 +248,7 @@ export default function HomeScreen() {
   // Function to get a quote based on the current date and language
   const getQuoteOfTheDay = () => {
     const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
     
     // Get quotes for current language, fallback to English if language not available
     const currentLanguageQuotes = motivationalQuotes[currentLanguage] || motivationalQuotes['en'];
@@ -495,26 +495,36 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Second row - Community Map and Elder Monitoring (2 buttons) */}
-          <View style={styles.quickActionsGridTwo}>
+          {/* Second row - Community Map, Local Connect, and Elder Monitoring (3 buttons) */}
+          <View style={styles.quickActionsGridThree}>
             <TouchableOpacity 
-              style={styles.actionCardTwo}
+              style={styles.actionCardThree}
               onPress={() => router.push('/community-map')}
             >
-              <View style={[styles.actionIconContainer, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
-                <CommunityMapIcon size={32} color="#F59E0B" />
+              <View style={[styles.actionIconContainer, { backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: s(8) }]}>
+                <CommunityMapIcon size={28} color="#F59E0B" />
               </View>
-              <Text style={styles.actionLabel}>{getResponsiveText(t('quickActions.communityMap'), 15)}</Text>
+              <Text style={[styles.actionLabel, { fontSize: fontSize.tiny }]}>{getResponsiveText(t('quickActions.communityMap'), 12)}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.actionCardTwo}
+              style={styles.actionCardThree}
+              onPress={() => router.push('/local-connect')}
+            >
+              <View style={[styles.actionIconContainer, { backgroundColor: 'rgba(0, 119, 182, 0.1)', padding: s(8) }]}>
+                <Users size={28} color="#0077B6" />
+              </View>
+              <Text style={[styles.actionLabel, { fontSize: fontSize.tiny }]}>{getResponsiveText(t('services.localConnect'), 12)}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionCardThree}
               onPress={() => router.push('/elder-monitoring')}
             >
-              <View style={[styles.actionIconContainer, { backgroundColor: 'rgba(220, 38, 38, 0.1)' }]}>
-                <Heart size={32} color="#DC2626" />
+              <View style={[styles.actionIconContainer, { backgroundColor: 'rgba(220, 38, 38, 0.1)', padding: s(8) }]}>
+                <Heart size={28} color="#DC2626" />
               </View>
-              <Text style={styles.actionLabel}>{getResponsiveText(t('elderMonitoring.title'), 15)}</Text>
+              <Text style={[styles.actionLabel, { fontSize: fontSize.tiny }]}>{getResponsiveText(t('elderMonitoring.title'), 12)}</Text>
             </TouchableOpacity>
           </View>
         </View>

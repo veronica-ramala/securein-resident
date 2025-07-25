@@ -391,13 +391,13 @@ export default function VisitorRegistrationScreen() {
         purpose: formData.purpose.trim(),
         pass_type: passType || 'visitor',
         status: 'active',
-        visit_date: formatDate(formData.fromDate),
-        visit_time: startDateTime,
+        visit_date: startDateTime,      // Use full timestamp for visit_date
+        visit_time: startDateTime,      // Use full timestamp for visit_time
         created_at: generatedAt,
         updated_at: generatedAt,
-        expiry_time: endDateTime,
-        visit_end_date: formatDate(formData.toDate),
-        qr_code: visitorId,        // Use visitor ID in QR code field
+        expiry_time: endDateTime,       // Use full timestamp for expiry_time
+        visit_end_date: endDateTime,    // Use full timestamp for visit_end_date
+        qr_code: visitorId,             // Use visitor ID in QR code field
       };
       
       // Validate that all required fields have values
@@ -414,6 +414,10 @@ export default function VisitorRegistrationScreen() {
       
       // ✅ Step 4: Insert into Supabase with custom visitor ID
       console.log('🚀 Attempting to insert data...');
+      console.log('🕐 Start DateTime:', startDateTime);
+      console.log('🕑 End DateTime:', endDateTime);
+      console.log('🕒 Generated At:', generatedAt);
+      
       const { data, error } = await supabase
         .from('visitor_passes')
         .insert([insertData])
@@ -421,7 +425,9 @@ export default function VisitorRegistrationScreen() {
         .single();
       
       console.log('📊 Insert result - data:', data);
-      console.log('📊 Insert result - error:', error);
+      if (error) {
+        console.log('❌ Supabase insert failed:', error.message, error.details, error.hint);
+      }
 
       // 🔒 STEP 5: Only proceed to QR generation if database save was successful
       if (error) {

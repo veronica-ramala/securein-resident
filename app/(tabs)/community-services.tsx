@@ -7,51 +7,8 @@ import { ChevronLeft, Phone, Clock } from 'lucide-react-native';
 export default function CommunityServicesScreen() {
   const router = useRouter();
 
-  // List of community services with contact details and timings
-  const services = [
-    {
-      id: '1',
-      name: 'Electrical Services',
-      contact: '+1 (555) 123-4567',
-      timing: 'Mon-Sat: 8:00 AM - 6:00 PM',
-      description: 'Professional electrical repairs and installations',
-    },
-    {
-      id: '2',
-      name: 'Plumbing Services',
-      contact: '+1 (555) 234-5678',
-      timing: 'Mon-Sat: 7:00 AM - 7:00 PM, Sun: Emergency Only',
-      description: 'Expert plumbing repairs and maintenance',
-    },
-    {
-      id: '3',
-      name: 'Pest Control',
-      contact: '+1 (555) 345-6789',
-      timing: 'Mon-Fri: 9:00 AM - 5:00 PM',
-      description: 'Comprehensive pest management solutions',
-    },
-    {
-      id: '4',
-      name: 'HVAC Service',
-      contact: '+1 (555) 456-7890',
-      timing: 'Mon-Sat: 8:00 AM - 8:00 PM, 24/7 Emergency Service',
-      description: 'Heating, ventilation, and air conditioning services',
-    },
-    {
-      id: '5',
-      name: 'House Cleaning',
-      contact: '+1 (555) 567-8901',
-      timing: 'Mon-Fri: 8:00 AM - 4:00 PM',
-      description: 'Professional home cleaning services',
-    },
-    {
-      id: '6',
-      name: 'Painting Services',
-      contact: '+1 (555) 678-9012',
-      timing: 'Mon-Sat: 9:00 AM - 6:00 PM',
-      description: 'Interior and exterior painting services',
-    },
-  ];
+  // Empty services array
+  const services = [];
 
   // No call functionality needed
 
@@ -100,7 +57,7 @@ export default function CommunityServicesScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.sectionIntro}>
-            Contact our trusted service providers for all your home maintenance needs.
+            
           </Text>
 
           {services.map(service => renderServiceCard(service))}

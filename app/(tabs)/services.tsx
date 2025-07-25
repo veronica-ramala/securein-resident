@@ -19,10 +19,6 @@ function ServicesScreen() {
     router.push('/(tabs)/emergency');
   }, [router]);
   
-  const navigateToLocalConnect = useCallback(() => {
-    router.push('/(tabs)/local-connect');
-  }, [router]);
-  
   const callEmergency = useCallback((service: string, number: string) => {
     alert(`${t('emergency.calling')} ${service} (${number})...`);
   }, [t]);
@@ -64,27 +60,7 @@ function ServicesScreen() {
             
             {/* Services Grid Layout */}
             <View style={styles.servicesGrid}>
-              {/* Community Section - Moved to Top */}
-              <Text style={styles.categoryTitle}>{t('services.communityServices')}</Text>
-              <TouchableOpacity 
-                style={styles.featureButton}
-                onPress={navigateToLocalConnect}
-                activeOpacity={0.7}
-              >
-                <View style={styles.featureContent}>
-                  <View style={[styles.featureIconContainer, { backgroundColor: '#0077B620' }]}>
-                    <Users size={28} color="#0077B6" />
-                  </View>
-                  <View style={styles.featureTextContainer}>
-                    <Text style={styles.featureTitle}>{t('services.localConnect')}</Text>
-                    <Text style={styles.featureDescription}>
-                      {t('services.localConnectDesc')}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-              
-              {/* Society Contacts - Moved to Second */}
+              {/* Society Contacts */}
               <Text style={styles.categoryTitle}>{t('emergency.societyContacts')}</Text>
               <View style={styles.gridRow}>
                 {societyContacts.map(contact => (

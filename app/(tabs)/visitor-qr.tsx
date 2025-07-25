@@ -8,7 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Share,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,11 +19,13 @@ import {
   Download,
   Check,
 } from 'lucide-react-native';
+import { useUserContext } from '../../context/UserContext';
 import Svg, { Rect, Circle } from 'react-native-svg';
 import QRCodeSVG from 'react-native-qrcode-svg';
 import { captureRef } from 'react-native-view-shot';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import Share from 'react-native-share';
 
 // Enhanced QR Code Component
 type QRCodeProps = {
@@ -93,6 +95,9 @@ export default function VisitorQRScreen() {
   const router = useRouter();
   const qrViewRef = useRef<View | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isSharing, setIsSharing] = React.useState(false);
+  const userContext = useUserContext();
+  const residentName = userContext?.profileData?.name || 'Resident';
   const params = useLocalSearchParams<{
     passType: string;
     visitorName: string;
@@ -166,20 +171,55 @@ export default function VisitorQRScreen() {
   const isVIP = params.passType === 'vip';
 
   const handleShare = async () => {
+    if (isSharing) return; // Prevent multiple shares
+    
+    setIsSharing(true);
     try {
-      const message = `${isVIP ? 'VIP' : 'Visitor'} Pass Generated\n\n` +
-        `Name: ${params.visitorName}\n` +
-        `Purpose: ${params.purpose}\n` +
-        `From: ${params.fromDate} ${params.fromTime}\n` +
-        `To: ${params.toDate} ${params.toTime}\n\n` +
-        `Please show this QR code at the gate for entry.`;
-
-      await Share.share({
-        message,
-        title: `${isVIP ? 'VIP' : 'Visitor'} Pass`,
+      // Capture the entire pass card view as an image
+      const uri = await captureRef(qrViewRef, {
+        format: 'png',
+        quality: 1.0, // Highest quality
+        result: 'tmpfile',
       });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to share the pass');
+
+      // Create sharing options
+      const shareOptions = {
+        title: `${isVIP ? 'VIP' : 'Visitor'} Access Pass`,
+        message: `${isVIP ? 'VIP' : 'Visitor'} Pass for ${params.visitorName}\n\nPurpose: ${params.purpose}\nValid: ${params.fromDate} ${params.fromTime} - ${params.toDate} ${params.toTime}\n\nPlease show this QR code at the gate for entry.`,
+        url: Platform.OS === 'android' ? `file://${uri}` : uri,
+        type: 'image/png',
+        filename: `${params.passType?.toUpperCase()}_Pass_${params.visitorName?.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.png`,
+        failOnCancel: false,
+      };
+
+      // Open native share sheet
+      const result = await Share.open(shareOptions);
+      
+      // Clean up temporary file after sharing
+      if (result.success || result.dismissedAction) {
+        try {
+          await FileSystem.deleteAsync(uri, { idempotent: true });
+        } catch (cleanupError) {
+          console.log('Cleanup error (non-critical):', cleanupError);
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Error sharing pass:', error);
+      
+      // Handle specific error cases
+      if (error.message && error.message.includes('User did not share')) {
+        // User cancelled sharing - this is normal, no need to show error
+        return;
+      }
+      
+      Alert.alert(
+        'Share Failed',
+        'Failed to share the pass. Please try again or use the save option instead.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -295,10 +335,10 @@ export default function VisitorQRScreen() {
               { backgroundColor: isVIP ? '#047857' : '#D97706' }
             ]}>
               <Text style={styles.passHeaderTitle}>
-                {isVIP ? 'VIP ACCESS PASS' : 'VISITOR ACCESS PASS'}
+                {residentName} is inviting you
               </Text>
               <Text style={styles.passHeaderSubtitle}>
-                SECUREIN SYSTEM
+                {isVIP ? 'VIP ACCESS PASS' : 'VISITOR ACCESS PASS'}
               </Text>
             </View>
 
@@ -425,13 +465,19 @@ export default function VisitorQRScreen() {
         </View>
 
         <View style={styles.actionsSection}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+          <TouchableOpacity 
+            style={[styles.actionButton, isSharing && styles.disabledButton]} 
+            onPress={handleShare}
+            disabled={isSharing}
+          >
             <LinearGradient
               colors={isVIP ? ['#047857', '#10B981'] : ['#D97706', '#F59E0B']}
               style={styles.actionButtonGradient}
             >
               <Share2 size={20} color="#FFFFFF" />
-              <Text style={styles.actionButtonText}>Share Pass</Text>
+              <Text style={styles.actionButtonText}>
+                {isSharing ? 'Preparing Share...' : 'Share Pass'}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -581,19 +627,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   passHeaderTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
+    fontStyle: 'italic',
   },
   passHeaderSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#FFFFFF',
     textAlign: 'center',
-    marginTop: 4,
-    opacity: 0.9,
-    letterSpacing: 2,
+    marginTop: 6,
+    opacity: 0.95,
+    letterSpacing: 1.5,
+    fontWeight: '600',
   },
   qrCodeSection: {
     alignItems: 'center',
