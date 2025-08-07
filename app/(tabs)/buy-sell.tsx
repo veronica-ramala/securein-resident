@@ -148,7 +148,7 @@ export default function BuySellScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#0077B6', '#90CAF9']} style={styles.header}>
+      <LinearGradient colors={['#2196F3', '#1E88E5']} style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>{t('buySell.title')}</Text>
           <Text style={styles.headerSubtitle}>{t('buySell.marketplace')}</Text>
@@ -190,7 +190,7 @@ export default function BuySellScreen() {
               />
             </View>
             <TouchableOpacity style={styles.filterButton}>
-              <Filter size={20} color="#0077B6" />
+              <Filter size={20} color="#4DD0E1" />
             </TouchableOpacity>
           </View>
 
@@ -270,7 +270,7 @@ export default function BuySellScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F5F9FF',
   },
   header: {
     paddingVertical: 20,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeTab: {
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
   },
   tabText: {
     fontSize: 14,
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   activeCategoryChip: {
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
   },
   categoryText: {
     fontSize: 14,
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   listingPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#0077B6',
+    color: '#1E88E5',
     marginTop: 0,
     marginBottom: 8,
     lineHeight: 20,
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   contactButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   postButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,

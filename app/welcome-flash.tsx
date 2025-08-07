@@ -86,9 +86,9 @@ export default function WelcomeFlashScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" backgroundColor="#0077B6" />
+      <StatusBar style="light" backgroundColor="#2196F3" />
       <LinearGradient
-        colors={['#0077B6', '#1976D2', '#0077B6']}
+        colors={['#2196F3', '#1E88E5', '#2196F3']}
         style={styles.gradient}
       >
         <Animated.View style={[

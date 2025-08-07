@@ -283,7 +283,7 @@ export default function HomeScreen() {
   };
 
   // Function to get weather icon
-  const getWeatherIcon = (iconType, size = 24, color = "#0077B6") => {
+  const getWeatherIcon = (iconType, size = 24, color = "#4DD0E1") => {
     switch (iconType) {
       case "sunny":
         return <Sun size={size} color={color} />;
@@ -381,11 +381,11 @@ export default function HomeScreen() {
   const unreadNotificationsCount = residentAlerts.filter(alert => !alert.read).length;
 
   const quickActions = [
-    { icon: CommunityGateIcon, label: t('quickActions.gate'), color: '#0077B6' },
-    { icon: Store, label: t('quickActions.store'), color: '#8B5CF6' },
-    { icon: ShuttleRacketIcon, label: t('quickActions.facilities'), color: '#10B981' },
-    { icon: CommunityMapIcon, label: t('quickActions.communityMap'), color: '#F59E0B' },
-    { icon: Heart, label: t('elderMonitoring.title'), color: '#DC2626' },
+    { icon: CommunityGateIcon, label: t('quickActions.gate'), color: '#4DD0E1' },
+    { icon: Store, label: t('quickActions.store'), color: '#4DD0E1' },
+    { icon: ShuttleRacketIcon, label: t('quickActions.facilities'), color: '#4DD0E1' },
+    { icon: CommunityMapIcon, label: t('quickActions.communityMap'), color: '#4DD0E1' },
+    { icon: Heart, label: t('elderMonitoring.title'), color: '#4DD0E1' },
   ];
 
 
@@ -393,7 +393,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#0077B6', '#90CAF9']}
+        colors={['#2196F3', '#1E88E5']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -537,7 +537,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
   },
   content: {
     flex: 1,
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: spacing.regular,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     marginTop: 0,
@@ -648,14 +648,14 @@ const styles = StyleSheet.create({
   quoteTitle: {
     fontSize: fontSize.medium,
     fontWeight: 'bold',
-    color: '#0077B6',
+    color: '#1E88E5',
     marginBottom: vs(8),
     textAlign: 'center',
     lineHeight: getLineHeight(fontSize.medium),
   },
   quoteDivider: {
     height: 1,
-    backgroundColor: 'rgba(0, 119, 182, 0.1)',
+    backgroundColor: 'rgba(30, 136, 229, 0.1)',
     width: '35%',
     alignSelf: 'center',
     marginBottom: vs(10),
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSize.xlarge,
     fontWeight: 'bold',
-    color: '#0077B6',
+    color: '#1E88E5',
     marginBottom: vs(18),
     marginLeft: s(5),
     lineHeight: getLineHeight(fontSize.xlarge),

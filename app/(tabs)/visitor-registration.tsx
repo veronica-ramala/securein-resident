@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
@@ -92,6 +92,28 @@ export default function VisitorRegistrationScreen() {
   
   // 🔒 Loading state to prevent multiple submissions and ensure single QR generation
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      phoneNumber: '',
+      purpose: '',
+      fromDate: null,
+      toDate: null,
+      fromTime: null,
+      toTime: null,
+    });
+    setShowPurposePicker(false);
+    setShowDatePicker({ visible: false, type: 'fromDate' });
+  };
+
+  // Reset form when screen is focused (user navigates back)
+  useFocusEffect(
+    React.useCallback(() => {
+      resetForm();
+    }, [])
+  );
 
   const purposes = [
     'Business Meeting',
@@ -479,6 +501,9 @@ export default function VisitorRegistrationScreen() {
         pathname: '/(tabs)/visitor-qr',
         params: qrData
       });
+
+      // ✅ Step 7: Reset form after successful navigation
+      resetForm();
 
     } catch (error) {
       console.error('❌ Error in handleSubmit:', error);

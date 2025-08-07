@@ -55,7 +55,7 @@ export default function ProfileScreen() {
       title: t('profile.editProfile'),
       description: t('profile.editProfileDesc'),
       icon: Edit,
-      color: '#0077B6',
+      color: '#4DD0E1',
       action: () => router.push('/(tabs)/edit-profile'),
     },
     {
@@ -63,7 +63,7 @@ export default function ProfileScreen() {
       title: t('profile.language'),
       description: t('profile.languageDesc', { language: getCurrentLanguageName() }),
       icon: Globe,
-      color: '#10B981',
+      color: '#4DD0E1',
       action: () => setLanguageModalVisible(true),
       hasChevron: true,
     },
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
       title: t('profile.notificationSettings'),
       description: t('profile.notificationDesc'),
       icon: Bell,
-      color: '#F59E0B',
+      color: '#4DD0E1',
       action: () => alert(t('profile.comingSoon')),
       hasSwitch: true,
       switchValue: notificationsEnabled,
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
       title: t('profile.helpSupport'),
       description: t('profile.helpSupportDesc'),
       icon: HelpCircle,
-      color: '#EC4899',
+      color: '#4DD0E1',
       action: () => alert(t('profile.comingSoon')),
     },
   ];
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#0077B6', '#90CAF9']}
+        colors={['#2196F3', '#1E88E5']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -253,7 +253,7 @@ export default function ProfileScreen() {
                     </Text>
                   </View>
                   {currentLanguage === language.code && (
-                    <Check size={20} color="#10B981" />
+                    <Check size={20} color="#4DD0E1" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -268,7 +268,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
   },
   header: {
     paddingVertical: 10,

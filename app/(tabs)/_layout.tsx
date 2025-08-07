@@ -18,8 +18,8 @@ function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#0077B6',
-        tabBarInactiveTintColor: '#90CAF9',
+        tabBarActiveTintColor: '#1E88E5',
+        tabBarInactiveTintColor: '#4DD0E1',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#DDDBCB',

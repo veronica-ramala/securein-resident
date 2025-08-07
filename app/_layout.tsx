@@ -5,6 +5,7 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useBackHandler } from '@/hooks/useBackHandler';
 import { UserProvider } from '../context/UserContext';
 import { LocalizationProvider } from '../context/LocalizationContext';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../src/i18n/i18n'; // Initialize i18n
 
 function RootLayoutContent() {
@@ -21,17 +22,19 @@ function RootLayoutContent() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="light" backgroundColor="#0077B6" />
+      <StatusBar style="light" backgroundColor="#2196F3" />
     </>
   );
 }
 
 export default function RootLayout() {
   return (
-    <LocalizationProvider>
-      <UserProvider>
-        <RootLayoutContent />
-      </UserProvider>
-    </LocalizationProvider>
+    <ErrorBoundary>
+      <LocalizationProvider>
+        <UserProvider>
+          <RootLayoutContent />
+        </UserProvider>
+      </LocalizationProvider>
+    </ErrorBoundary>
   );
 }

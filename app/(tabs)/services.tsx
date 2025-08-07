@@ -25,10 +25,10 @@ function ServicesScreen() {
   
   // Memoize emergency contacts to prevent recreation on every render
   const emergencyContacts = useMemo(() => [
-    { id: 'police', name: t('emergency.police'), number: '100', icon: AlertTriangle, color: '#0077B6', bgColor: '#E6F7FF' },
-    { id: 'fire', name: t('emergency.fire'), number: '101', icon: Flame, color: '#F97316', bgColor: '#FFF7ED' },
-    { id: 'ambulance', name: t('emergency.ambulance'), number: '108', icon: Ambulance, color: '#EF4444', bgColor: '#FEF2F2' },
-    { id: 'security', name: t('emergency.societySecurity'), number: t('emergency.guard'), icon: ShieldAlert, color: '#0077B6', bgColor: '#E6F7FF' },
+    { id: 'police', name: t('emergency.police'), number: '100', icon: AlertTriangle, color: '#4DD0E1', bgColor: '#F5F9FF' },
+    { id: 'fire', name: t('emergency.fire'), number: '101', icon: Flame, color: '#4DD0E1', bgColor: '#F5F9FF' },
+    { id: 'ambulance', name: t('emergency.ambulance'), number: '108', icon: Ambulance, color: '#EF5350', bgColor: '#FEF2F2' },
+    { id: 'security', name: t('emergency.societySecurity'), number: t('emergency.guard'), icon: ShieldAlert, color: '#4DD0E1', bgColor: '#F5F9FF' },
   ], [t]);
 
   const societyContacts = [
@@ -38,10 +38,10 @@ function ServicesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0077B6" />
+      <StatusBar barStyle="light-content" backgroundColor="#2196F3" />
       <View style={styles.container}>
         <LinearGradient
-          colors={['#0077B6', '#90CAF9']}
+          colors={['#2196F3', '#1E88E5']}
           style={styles.header}
         >
           <View style={styles.headerContent}>
@@ -69,8 +69,8 @@ function ServicesScreen() {
                     style={styles.gridCard}
                     onPress={() => callEmergency(contact.name, contact.number)}
                   >
-                    <View style={[styles.gridIconContainer, { backgroundColor: '#F0F9FF' }]}>
-                      <contact.icon size={28} color="#0369A1" />
+                    <View style={[styles.gridIconContainer, { backgroundColor: '#F5F9FF' }]}>
+                      <contact.icon size={28} color="#4DD0E1" />
                     </View>
                     <Text style={styles.gridCardTitle}>{contact.name}</Text>
                     <Text style={styles.gridCardSubtitle}>{contact.number}</Text>
@@ -143,11 +143,11 @@ function ServicesScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
   },
   header: {
     paddingVertical: 10,
@@ -177,12 +177,12 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
   },
   content: {
     padding: 16,
     paddingTop: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     marginTop: 0,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#125E8A',
+    color: '#1E88E5',
     marginBottom: 8,
   },
   sectionDescription: {
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#125E8A',
+    color: '#1E88E5',
     marginTop: 8,
     marginBottom: 16,
   },

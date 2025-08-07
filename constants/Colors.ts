@@ -1,26 +1,26 @@
 /**
  * Color theme configuration for SecureIn Community App
- * Primary color: #0077B6 (Ocean Blue)
+ * Updated to match brand logo colors
  */
 
 export const Colors = {
-  // Primary colors
-  primary: '#0077B6',
-  primaryLight: '#90CAF9', // Lighter shade for gradients and secondary elements
-  primaryDark: '#005A8B', // Darker shade for emphasis
+  // Primary colors - Brand palette
+  primary: '#1E88E5', // Medium blue for primary buttons and action triggers
+  primaryLight: '#4DD0E1', // Teal blue for icons and icon-accented buttons
+  primaryDark: '#2196F3', // Bright blue for headers and top navigation
   
   // Secondary colors (derived from primary)
-  secondary: '#B3E5FC', // Very light blue for backgrounds
-  accent: '#0288D1', // Slightly different blue for accents
+  secondary: '#F5F9FF', // Soft bluish-white for general screen backgrounds
+  accent: '#4DD0E1', // Teal blue for accents and icons
   
   // Status colors
   success: '#10B981',
   warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#0077B6',
+  error: '#EF5350', // Calm red for error messages, validation borders, and delete buttons
+  info: '#2196F3',
   
   // Neutral colors
-  white: '#FFFFFF',
+  white: '#FFFFFF', // For card backgrounds, modal surfaces, form inputs, and text containers
   black: '#000000',
   gray: {
     50: '#F9FAFB',
@@ -37,15 +37,15 @@ export const Colors = {
   
   // Background colors
   background: {
-    primary: '#FFFFFF',
-    secondary: '#F5F5F5',
-    card: '#FFFFFF',
-    overlay: 'rgba(0, 119, 182, 0.1)',
+    primary: '#F5F9FF', // Soft bluish-white for general screen backgrounds
+    secondary: '#FFFFFF', // White for card backgrounds
+    card: '#FFFFFF', // White for card backgrounds, modal surfaces, form inputs
+    overlay: 'rgba(33, 150, 243, 0.1)', // Updated overlay with header color
   },
   
   // Text colors
   text: {
-    primary: '#0077B6',
+    primary: '#1E88E5', // Medium blue for primary text
     secondary: '#4B5563',
     light: '#6B7280',
     white: '#FFFFFF',
@@ -56,13 +56,24 @@ export const Colors = {
   border: {
     light: '#DDDBCB',
     medium: 'rgba(0, 0, 0, 0.08)',
-    primary: '#0077B6',
+    primary: '#1E88E5', // Medium blue for primary borders
+  },
+  
+  // Brand-specific color mappings
+  brand: {
+    background: '#F5F9FF', // Soft bluish-white
+    header: '#2196F3', // Bright blue for headers
+    icons: '#4DD0E1', // Teal blue for icons
+    buttons: '#1E88E5', // Medium blue for buttons
+    error: '#EF5350', // Calm red for errors
+    white: '#FFFFFF', // Pure white
   },
   
   // Legacy color mappings (for easy replacement)
   legacy: {
     oldPrimary: '#125E8A',
     oldSecondary: '#89AAE6',
+    oldHeader: '#0077B6',
   }
 };
 

@@ -151,7 +151,7 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Resident Name</Text>
               <View style={styles.inputContainer}>
-                {renderIcon(User, 20, "#0077B6")}
+                {renderIcon(User, 20, "#4DD0E1")}
                 <TextInput
                   style={styles.input}
                   value={residentName}
@@ -166,7 +166,7 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Flat Number</Text>
               <View style={styles.inputContainer}>
-                {renderIcon(Home, 20, "#0077B6")}
+                {renderIcon(Home, 20, "#4DD0E1")}
                 <TextInput
                   style={styles.input}
                   value={flatNumber}
@@ -190,7 +190,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
               <View style={styles.inputContainer}>
-                {renderIcon(contactType === 'phone' ? Phone : Mail, 20, "#0077B6")}
+                {renderIcon(contactType === 'phone' ? Phone : Mail, 20, "#4DD0E1")}
                 <TextInput
                   style={styles.input}
                   value={contactInfo}
@@ -209,7 +209,7 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Password</Text>
               <View style={styles.inputContainer}>
-                {renderIcon(Lock, 20, "#0077B6")}
+                {renderIcon(Lock, 20, "#4DD0E1")}
                 <TextInput
                   style={styles.passwordInput}
                   value={password}
@@ -223,8 +223,8 @@ export default function LoginScreen() {
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? 
-                    renderIcon(EyeOff, 20, "#0077B6") : 
-                    renderIcon(Eye, 20, "#0077B6")}
+                    renderIcon(EyeOff, 20, "#4DD0E1") : 
+                    renderIcon(Eye, 20, "#4DD0E1")}
                 </TouchableOpacity>
               </View>
             </View>
@@ -265,13 +265,13 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F5F9FF',
   },
   header: {
     paddingVertical: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0077B6',
+    backgroundColor: '#2196F3',
   },
   logoContainer: {
     alignItems: 'center',
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#0077B6',
+    color: '#1E88E5',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: 12,
-    color: '#0077B6',
+    color: '#1E88E5',
     fontWeight: '600',
   },
   inputLabel: {
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   loginButton: {
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
@@ -373,16 +373,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   demoButton: {
-    backgroundColor: '#F0F7FF',
+    backgroundColor: '#F5F9FF',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 12,
     borderWidth: 1,
-    borderColor: '#0077B6',
+    borderColor: '#1E88E5',
   },
   demoButtonText: {
-    color: '#0077B6',
+    color: '#1E88E5',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   forgotPasswordText: {
-    color: '#0077B6',
+    color: '#1E88E5',
     fontSize: 14,
   },
   footer: {

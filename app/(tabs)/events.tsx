@@ -880,10 +880,10 @@ export default function EventsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F9FF',
   },
   header: {
-    backgroundColor: '#0077B6',
+    backgroundColor: '#2196F3',
     paddingVertical: 12,
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderLeftWidth: 4,
-    borderLeftColor: '#0077B6',
+    borderLeftColor: '#1E88E5',
   },
   eventHeader: {
     marginBottom: 8,
@@ -977,7 +977,7 @@ const styles = StyleSheet.create({
   },
   eventOrganizer: {
     fontSize: 12,
-    color: '#0077B6',
+    color: '#1E88E5',
     fontWeight: '500',
   },
   eventDescription: {
@@ -1001,7 +1001,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   interestedButton: {
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -1034,8 +1034,8 @@ const styles = StyleSheet.create({
     borderColor: '#D1D5DB',
   },
   activeCategoryTab: {
-    backgroundColor: '#0077B6',
-    borderColor: '#0077B6',
+    backgroundColor: '#1E88E5',
+    borderColor: '#1E88E5',
   },
   categoryTabText: {
     fontSize: 14,
@@ -1061,7 +1061,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -1095,7 +1095,7 @@ const styles = StyleSheet.create({
   modalSaveButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
     borderRadius: 6,
   },
   modalSaveButtonText: {
@@ -1145,8 +1145,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categorySelectorButtonActive: {
-    backgroundColor: '#0077B6',
-    borderColor: '#0077B6',
+    backgroundColor: '#1E88E5',
+    borderColor: '#1E88E5',
   },
   categorySelectorButtonText: {
     fontSize: 14,
@@ -1229,7 +1229,7 @@ const styles = StyleSheet.create({
   },
   pickerModalDone: {
     fontSize: 16,
-    color: '#0077B6',
+    color: '#1E88E5',
     fontWeight: '600',
   },
   // Date Picker Styles
@@ -1250,7 +1250,7 @@ const styles = StyleSheet.create({
   monthYearButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0077B6',
+    color: '#1E88E5',
   },
   monthYearText: {
     fontSize: 18,
@@ -1283,7 +1283,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   calendarDayToday: {
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
   },
   calendarDayPast: {
     opacity: 0.3,
@@ -1327,7 +1327,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   timePickerOptionSelected: {
-    backgroundColor: '#0077B6',
+    backgroundColor: '#1E88E5',
   },
   timePickerOptionText: {
     fontSize: 16,

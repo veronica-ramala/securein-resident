@@ -71,7 +71,7 @@ export default function FlashScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" backgroundColor="#0077B6" />
+      <StatusBar style="light" backgroundColor="#2196F3" />
       <View style={styles.content}>
         <Animated.View style={[
           styles.logoContainer, 
@@ -105,7 +105,7 @@ export default function FlashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0077B6',
+    backgroundColor: '#2196F3',
   },
   content: {
     flex: 1,
