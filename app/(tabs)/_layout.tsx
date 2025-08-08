@@ -158,6 +158,10 @@ function TabLayout() {
         name="delivery-registration"
         options={{ href: null }}
       />
+      <Tabs.Screen
+        name="cab-registration"
+        options={{ href: null }}
+      />
     </Tabs>
   );
 }

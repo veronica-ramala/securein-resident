@@ -69,13 +69,19 @@ export default function GatePage() {
     setModalVisible(true);
   };
 
-  const selectPass = (passType: 'visitor' | 'vip' | 'delivery') => {
+  const selectPass = (passType: 'visitor' | 'vip' | 'delivery' | 'cab') => {
     setModalVisible(false);
     
     if (passType === 'delivery') {
       // Navigate to delivery registration form
       router.push({
         pathname: '/(tabs)/delivery-registration',
+        params: { passType }
+      });
+    } else if (passType === 'cab') {
+      // Navigate to cab registration form
+      router.push({
+        pathname: '/(tabs)/cab-registration',
         params: { passType }
       });
     } else {
@@ -176,6 +182,16 @@ export default function GatePage() {
               <View style={styles.passOptionContent}>
                 <Text style={styles.passOptionTitle}>Delivery Pass</Text>
                 <Text style={styles.passOptionDescription}>Quick access for delivery personnel</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.passOption, styles.cabPassOption]}
+              onPress={() => selectPass('cab')}
+            >
+              <View style={styles.passOptionContent}>
+                <Text style={styles.passOptionTitle}>Cab Pass</Text>
+                <Text style={styles.passOptionDescription}>Access for ride hailing services</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -434,6 +450,10 @@ const styles = StyleSheet.create({
   deliveryPassOption: {
     backgroundColor: '#FFF7ED', // Light orange background
     borderColor: '#F97316', // Orange border
+  },
+  cabPassOption: {
+    backgroundColor: '#F3F4F6', // Light purple background
+    borderColor: '#7C3AED', // Purple border
   },
   passOptionContent: {
     flexDirection: 'column',

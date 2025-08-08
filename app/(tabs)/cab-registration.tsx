@@ -21,7 +21,7 @@ import { supabase } from '@/lib/supabase';
 import { useUserContext } from '../../context/UserContext';
 import {
   Home,
-  Truck,
+  Car,
   Clock,
   ChevronLeft,
   ChevronDown,
@@ -30,15 +30,17 @@ import {
   User,
 } from 'lucide-react-native';
 
-interface DeliveryFormData {
+interface CabFormData {
   flatNumber: string;
-  deliveryApp: string;
-  customDeliveryApp: string;
-  estimatedDuration: string;
+  rideHailingApp: string;
+  customRideApp: string;
+  vehicle: string;
+  customVehicle: string;
+  duration: string;
   estimatedArrival: Date;
 }
 
-export default function DeliveryRegistrationScreen() {
+export default function CabRegistrationScreen() {
   const router = useRouter();
   const { passType } = useLocalSearchParams<{ passType: string }>();
   const userContext = useUserContext();
@@ -55,45 +57,63 @@ export default function DeliveryRegistrationScreen() {
     ? extractFlatNumber(userContext.profileData.address)
     : '';
 
-  const [formData, setFormData] = useState<DeliveryFormData>({
+  const [formData, setFormData] = useState<CabFormData>({
     flatNumber: userFlatNumber,
-    deliveryApp: '',
-    customDeliveryApp: '',
-    estimatedDuration: '30',
+    rideHailingApp: '',
+    customRideApp: '',
+    vehicle: '',
+    customVehicle: '',
+    duration: '30',
     estimatedArrival: new Date(Date.now() + 30 * 60 * 1000),
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showDeliveryAppDropdown, setShowDeliveryAppDropdown] = useState(false);
-  const [deliveryAppSearch, setDeliveryAppSearch] = useState('');
-  const deliveryApps = [ 'Zepto','Blinkit','Amazon','Flipkart','Swiggy','Zomato','BigBasket','Dunzo','Other' ];
+  const [showRideAppDropdown, setShowRideAppDropdown] = useState(false);
+  const [showVehicleDropdown, setShowVehicleDropdown] = useState(false);
+  const [rideAppSearch, setRideAppSearch] = useState('');
+  const [vehicleSearch, setVehicleSearch] = useState('');
+  
+  const rideHailingApps = ['Ola', 'Rapido', 'Uber', 'Other'];
+  const vehicleTypes = ['Bike', 'Auto', 'Car', 'Other'];
   const durationOptions = [
     { label: '30 minutes', value: '30' },
     { label: '45 minutes', value: '45' },
     { label: '1 hour', value: '60' },
   ];
 
-  const filteredDeliveryApps = deliveryApps.filter(app =>
-    app.toLowerCase().includes(deliveryAppSearch.toLowerCase())
+  const filteredRideApps = rideHailingApps.filter(app =>
+    app.toLowerCase().includes(rideAppSearch.toLowerCase())
+  );
+
+  const filteredVehicleTypes = vehicleTypes.filter(vehicle =>
+    vehicle.toLowerCase().includes(vehicleSearch.toLowerCase())
   );
 
   useEffect(() => {
-    const durationInMinutes = parseInt(formData.estimatedDuration);
+    const durationInMinutes = parseInt(formData.duration);
     const newArrivalTime = new Date(Date.now() + durationInMinutes * 60 * 1000);
     setFormData(prev => ({ ...prev, estimatedArrival: newArrivalTime }));
-  }, [formData.estimatedDuration]);
+  }, [formData.duration]);
 
   const validateForm = (): boolean => {
     if (!formData.flatNumber.trim()) {
       Alert.alert('Missing Info', 'Flat number is missing');
       return false;
     }
-    if (!formData.deliveryApp.trim()) {
-      Alert.alert('Validation Error', 'Please select delivery app');
+    if (!formData.rideHailingApp.trim()) {
+      Alert.alert('Validation Error', 'Please select ride hailing app');
       return false;
     }
-    if (formData.deliveryApp === 'Other' && !formData.customDeliveryApp.trim()) {
-      Alert.alert('Validation Error', 'Please enter the delivery app name');
+    if (formData.rideHailingApp === 'Other' && !formData.customRideApp.trim()) {
+      Alert.alert('Validation Error', 'Please enter the ride hailing app name');
+      return false;
+    }
+    if (!formData.vehicle.trim()) {
+      Alert.alert('Validation Error', 'Please select vehicle type');
+      return false;
+    }
+    if (formData.vehicle === 'Other' && !formData.customVehicle.trim()) {
+      Alert.alert('Validation Error', 'Please enter the vehicle type');
       return false;
     }
     return true;
@@ -105,13 +125,15 @@ export default function DeliveryRegistrationScreen() {
     setIsSubmitting(true);
 
     try {
-      const deliveryAppName = formData.deliveryApp === 'Other' ? formData.customDeliveryApp.trim() : formData.deliveryApp;
-      const durationInMinutes = parseInt(formData.estimatedDuration);
+      const rideAppName = formData.rideHailingApp === 'Other' ? formData.customRideApp.trim() : formData.rideHailingApp;
+      const vehicleType = formData.vehicle === 'Other' ? formData.customVehicle.trim() : formData.vehicle;
+      const durationInMinutes = parseInt(formData.duration);
 
-      const { data, error } = await supabase.from('delivery_passes').insert([
+      const { data, error } = await supabase.from('cab_passes').insert([
         {
           flat_number: formData.flatNumber.trim(),
-          delivery_company: deliveryAppName,
+          ride_hailing_app: rideAppName,
+          vehicle_type: vehicleType,
           duration: `${durationInMinutes} minutes`,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -120,11 +142,11 @@ export default function DeliveryRegistrationScreen() {
 
       if (error) {
         console.error('Supabase error:', error);
-        Alert.alert('Error', 'Failed to save delivery pass');
+        Alert.alert('Error', 'Failed to save cab pass');
         return;
       }
 
-      Alert.alert('Success', 'Delivery pass created successfully', [
+      Alert.alert('Success', 'Cab pass created successfully', [
         { text: 'OK', onPress: () => router.push('/(tabs)/gate') }
       ]);
 
@@ -139,7 +161,7 @@ export default function DeliveryRegistrationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#FF6B35', '#FF8C42']}
+        colors={['#7C3AED', '#A855F7']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -149,7 +171,7 @@ export default function DeliveryRegistrationScreen() {
           >
             <ChevronLeft size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Delivery Registration</Text>
+          <Text style={styles.headerTitle}>Cab Registration</Text>
         </View>
       </LinearGradient>
 
@@ -159,8 +181,10 @@ export default function DeliveryRegistrationScreen() {
       >
         <TouchableWithoutFeedback onPress={() => {
           Keyboard.dismiss();
-          setShowDeliveryAppDropdown(false);
-          setDeliveryAppSearch('');
+          setShowRideAppDropdown(false);
+          setShowVehicleDropdown(false);
+          setRideAppSearch('');
+          setVehicleSearch('');
         }}>
           <ScrollView 
             style={styles.scrollView}
@@ -170,11 +194,11 @@ export default function DeliveryRegistrationScreen() {
             {/* Pass Type Info */}
             <View style={styles.passTypeCard}>
               <View style={styles.passTypeHeader}>
-                <Truck size={24} color="#FF6B35" />
-                <Text style={styles.passTypeTitle}>Delivery Pass</Text>
+                <Car size={24} color="#7C3AED" />
+                <Text style={styles.passTypeTitle}>Cab Pass</Text>
               </View>
               <Text style={styles.passTypeDescription}>
-                Register your delivery to get a temporary access pass
+                Register your cab ride to get a temporary access pass
               </Text>
             </View>
 
@@ -183,7 +207,7 @@ export default function DeliveryRegistrationScreen() {
               {/* Flat Number */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>
-                  <Home size={16} color="#FF6B35" /> Flat Number *
+                  <Home size={16} color="#7C3AED" /> Flat Number *
                 </Text>
                 <TextInput
                   style={styles.input}
@@ -194,58 +218,58 @@ export default function DeliveryRegistrationScreen() {
                 />
               </View>
 
-              {/* Delivery App Selection */}
+              {/* Ride Hailing App Selection */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>
-                  <Truck size={16} color="#FF6B35" /> Delivery App *
+                  <Car size={16} color="#7C3AED" /> Ride Hailing App *
                 </Text>
                 <TouchableOpacity
                   style={styles.dropdown}
-                  onPress={() => setShowDeliveryAppDropdown(!showDeliveryAppDropdown)}
+                  onPress={() => setShowRideAppDropdown(!showRideAppDropdown)}
                 >
-                  <Text style={[styles.dropdownText, !formData.deliveryApp && styles.placeholderText]}>
-                    {formData.deliveryApp || 'Select delivery app'}
+                  <Text style={[styles.dropdownText, !formData.rideHailingApp && styles.placeholderText]}>
+                    {formData.rideHailingApp || 'Select ride hailing app'}
                   </Text>
                   <ChevronDown size={20} color="#666" />
                 </TouchableOpacity>
                 
-                {showDeliveryAppDropdown && (
+                {showRideAppDropdown && (
                   <View style={styles.dropdownList}>
                     <View style={styles.searchContainer}>
                       <TextInput
                         style={styles.searchInput}
-                        value={deliveryAppSearch}
-                        onChangeText={setDeliveryAppSearch}
-                        placeholder="Search delivery apps..."
+                        value={rideAppSearch}
+                        onChangeText={setRideAppSearch}
+                        placeholder="Search ride apps..."
                         placeholderTextColor="#999"
                       />
                     </View>
                     <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
-                      {filteredDeliveryApps.map((app) => (
+                      {filteredRideApps.map((app) => (
                         <TouchableOpacity
                           key={app}
                           style={[
                             styles.dropdownItem,
-                            formData.deliveryApp === app && styles.dropdownItemSelected
+                            formData.rideHailingApp === app && styles.dropdownItemSelected
                           ]}
                           onPress={() => {
-                            setFormData(prev => ({ ...prev, deliveryApp: app }));
-                            setShowDeliveryAppDropdown(false);
-                            setDeliveryAppSearch('');
+                            setFormData(prev => ({ ...prev, rideHailingApp: app }));
+                            setShowRideAppDropdown(false);
+                            setRideAppSearch('');
                           }}
                         >
                           <Text style={[
                             styles.dropdownItemText,
-                            formData.deliveryApp === app && styles.dropdownItemTextSelected
+                            formData.rideHailingApp === app && styles.dropdownItemTextSelected
                           ]}>
                             {app}
                           </Text>
-                          {formData.deliveryApp === app && (
-                            <Check size={16} color="#FF6B35" />
+                          {formData.rideHailingApp === app && (
+                            <Check size={16} color="#7C3AED" />
                           )}
                         </TouchableOpacity>
                       ))}
-                      {filteredDeliveryApps.length === 0 && (
+                      {filteredRideApps.length === 0 && (
                         <View style={styles.noResultsContainer}>
                           <Text style={styles.noResultsText}>No apps found</Text>
                         </View>
@@ -255,24 +279,99 @@ export default function DeliveryRegistrationScreen() {
                 )}
               </View>
 
-              {/* Custom Delivery App (if Other is selected) */}
-              {formData.deliveryApp === 'Other' && (
+              {/* Custom Ride App (if Other is selected) */}
+              {formData.rideHailingApp === 'Other' && (
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Delivery App Name *</Text>
+                  <Text style={styles.label}>Ride Hailing App Name *</Text>
                   <TextInput
                     style={styles.input}
-                    value={formData.customDeliveryApp}
-                    onChangeText={(text) => setFormData(prev => ({ ...prev, customDeliveryApp: text }))}
-                    placeholder="Enter delivery app name"
+                    value={formData.customRideApp}
+                    onChangeText={(text) => setFormData(prev => ({ ...prev, customRideApp: text }))}
+                    placeholder="Enter ride hailing app name"
                     placeholderTextColor="#999"
                   />
                 </View>
               )}
 
-              {/* Estimated Duration */}
+              {/* Vehicle Type Selection */}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>
-                  <Clock size={16} color="#FF6B35" /> Estimated Duration
+                  <Car size={16} color="#7C3AED" /> Vehicle Type *
+                </Text>
+                <TouchableOpacity
+                  style={styles.dropdown}
+                  onPress={() => setShowVehicleDropdown(!showVehicleDropdown)}
+                >
+                  <Text style={[styles.dropdownText, !formData.vehicle && styles.placeholderText]}>
+                    {formData.vehicle || 'Select vehicle type'}
+                  </Text>
+                  <ChevronDown size={20} color="#666" />
+                </TouchableOpacity>
+                
+                {showVehicleDropdown && (
+                  <View style={styles.dropdownList}>
+                    <View style={styles.searchContainer}>
+                      <TextInput
+                        style={styles.searchInput}
+                        value={vehicleSearch}
+                        onChangeText={setVehicleSearch}
+                        placeholder="Search vehicle types..."
+                        placeholderTextColor="#999"
+                      />
+                    </View>
+                    <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled={true}>
+                      {filteredVehicleTypes.map((vehicle) => (
+                        <TouchableOpacity
+                          key={vehicle}
+                          style={[
+                            styles.dropdownItem,
+                            formData.vehicle === vehicle && styles.dropdownItemSelected
+                          ]}
+                          onPress={() => {
+                            setFormData(prev => ({ ...prev, vehicle }));
+                            setShowVehicleDropdown(false);
+                            setVehicleSearch('');
+                          }}
+                        >
+                          <Text style={[
+                            styles.dropdownItemText,
+                            formData.vehicle === vehicle && styles.dropdownItemTextSelected
+                          ]}>
+                            {vehicle}
+                          </Text>
+                          {formData.vehicle === vehicle && (
+                            <Check size={16} color="#7C3AED" />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                      {filteredVehicleTypes.length === 0 && (
+                        <View style={styles.noResultsContainer}>
+                          <Text style={styles.noResultsText}>No vehicle types found</Text>
+                        </View>
+                      )}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
+              {/* Custom Vehicle (if Other is selected) */}
+              {formData.vehicle === 'Other' && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Vehicle Type *</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={formData.customVehicle}
+                    onChangeText={(text) => setFormData(prev => ({ ...prev, customVehicle: text }))}
+                    placeholder="Enter vehicle type"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+              )}
+
+              {/* Duration */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  <Clock size={16} color="#7C3AED" /> Duration
                 </Text>
                 <View style={styles.durationSelector}>
                   {durationOptions.map((option) => (
@@ -280,13 +379,13 @@ export default function DeliveryRegistrationScreen() {
                       key={option.value}
                       style={[
                         styles.durationOption,
-                        formData.estimatedDuration === option.value && styles.durationOptionSelected
+                        formData.duration === option.value && styles.durationOptionSelected
                       ]}
-                      onPress={() => setFormData(prev => ({ ...prev, estimatedDuration: option.value }))}
+                      onPress={() => setFormData(prev => ({ ...prev, duration: option.value }))}
                     >
                       <Text style={[
                         styles.durationOptionText,
-                        formData.estimatedDuration === option.value && styles.durationOptionTextSelected
+                        formData.duration === option.value && styles.durationOptionTextSelected
                       ]}>
                         {option.label}
                       </Text>
@@ -298,7 +397,7 @@ export default function DeliveryRegistrationScreen() {
               {/* Estimated Arrival Time */}
               <View style={styles.infoCard}>
                 <View style={styles.infoHeader}>
-                  <Info size={20} color="#FF6B35" />
+                  <Info size={20} color="#7C3AED" />
                   <Text style={styles.infoTitle}>Estimated Arrival</Text>
                 </View>
                 <Text style={styles.arrivalTime}>
@@ -317,11 +416,11 @@ export default function DeliveryRegistrationScreen() {
               disabled={isSubmitting}
             >
               <LinearGradient
-                colors={isSubmitting ? ['#ccc', '#999'] : ['#FF6B35', '#FF8C42']}
+                colors={isSubmitting ? ['#ccc', '#999'] : ['#7C3AED', '#A855F7']}
                 style={styles.submitGradient}
               >
                 <Text style={styles.submitButtonText}>
-                  {isSubmitting ? 'Creating Pass...' : 'Create Delivery Pass'}
+                  {isSubmitting ? 'Creating Pass...' : 'Create Cab Pass'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -386,7 +485,7 @@ const styles = StyleSheet.create({
   passTypeTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FF6B35',
+    color: '#7C3AED',
     marginLeft: 10,
   },
   passTypeDescription: {
@@ -473,14 +572,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dropdownItemSelected: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#F3F4F6',
   },
   dropdownItemText: {
     fontSize: 16,
     color: '#333',
   },
   dropdownItemTextSelected: {
-    color: '#FF6B35',
+    color: '#7C3AED',
     fontWeight: '600',
   },
   noResultsContainer: {
@@ -507,8 +606,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   durationOptionSelected: {
-    backgroundColor: '#FF6B35',
-    borderColor: '#FF6B35',
+    backgroundColor: '#7C3AED',
+    borderColor: '#7C3AED',
   },
   durationOptionText: {
     fontSize: 14,
@@ -519,12 +618,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   infoCard: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#F3F4F6',
     borderRadius: 12,
     padding: 20,
     marginTop: 10,
     borderLeftWidth: 4,
-    borderLeftColor: '#FF6B35',
+    borderLeftColor: '#7C3AED',
   },
   infoHeader: {
     flexDirection: 'row',
@@ -534,13 +633,13 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FF6B35',
+    color: '#7C3AED',
     marginLeft: 8,
   },
   arrivalTime: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF6B35',
+    color: '#7C3AED',
     marginBottom: 4,
   },
   arrivalDate: {

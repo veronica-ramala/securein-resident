@@ -1,12 +1,12 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
-import { Shield, Users, Clock, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, UserPlus, ShieldAlert, Key, Store, Building, MapPin, Sun, Cloud, CloudRain, Thermometer, Droplets, Wind, Heart, Bell } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Animated } from 'react-native';
+import { Shield, Users, Clock, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, UserPlus, ShieldAlert, Key, Store, Building, MapPin, Sun, Cloud, CloudRain, Thermometer, Droplets, Wind, Heart, Bell, CloudOff } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Rect, Circle, Ellipse } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useLocalization } from '../../context/LocalizationContext';
 import { wp, hp, fontSize, spacing, s, vs, ms, RF, getResponsiveText, getLineHeight, isVerySmallDevice, isSmallDevice } from '../../utils/responsive';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 
@@ -119,6 +119,50 @@ export default function HomeScreen() {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [locationPermission, setLocationPermission] = useState<string | null>(null);
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Animation functions
+  const startWeatherAnimations = () => {
+    // Reset animations
+    fadeAnim.setValue(0);
+    slideAnim.setValue(0);
+    
+    // Fade in main weather content
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    
+    // Slide in hourly forecast items with stagger
+    Animated.timing(slideAnim, {
+      toValue: 1,
+      duration: 1000,
+      delay: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const startPulseAnimation = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
 
   // Function to get appropriate greeting based on time of day
   const getGreeting = () => {
@@ -279,6 +323,7 @@ export default function HomeScreen() {
       
       if (status !== 'granted') {
         console.log('Location permission denied');
+        setLocationPermission('denied');
         setWeatherError('Location permission denied');
         setWeatherLoading(false);
         return null;
@@ -342,6 +387,9 @@ export default function HomeScreen() {
         setWeatherData(transformedData);
         setWeatherError(null);
         setWeatherLoading(false);
+        
+        // Trigger animations when data loads successfully
+        startWeatherAnimations();
         return;
       }
       
@@ -349,8 +397,8 @@ export default function HomeScreen() {
       
     } catch (error) {
       console.error('Free weather service failed:', error);
-      // If free service also fails, use location-based mock data
-      await generateMockWeatherData(latitude, longitude);
+      // If free service also fails, show service unavailable
+      handleWeatherServiceUnavailable('All weather services failed');
     }
   };
 
@@ -372,42 +420,11 @@ export default function HomeScreen() {
     return forecast;
   };
 
-  // Function to generate mock weather data based on location
-  const generateMockWeatherData = async (latitude: number, longitude: number) => {
-    console.log('Generating mock weather data for coordinates:', latitude, longitude);
-    
-    // Simple logic to generate realistic weather based on location
-    let locationName = 'Unknown Location';
-    let baseTemp = 25;
-    
-    // Rough location detection based on coordinates
-    if (latitude >= 8 && latitude <= 37 && longitude >= 68 && longitude <= 97) {
-      // India region
-      locationName = 'India';
-      baseTemp = 28;
-    } else if (latitude >= 40 && latitude <= 41 && longitude >= -74 && longitude <= -73) {
-      // New York area
-      locationName = 'New York';
-      baseTemp = 20;
-    }
-    
-    const mockData = {
-      location: locationName,
-      temperature: baseTemp + Math.floor(Math.random() * 10) - 5, // ±5 degrees variation
-      condition: 'Partly Cloudy',
-      icon: 'partly-cloudy',
-      humidity: 60 + Math.floor(Math.random() * 20), // 60-80%
-      windSpeed: 5 + Math.floor(Math.random() * 15), // 5-20 km/h
-      feelsLike: baseTemp + Math.floor(Math.random() * 6) - 3,
-      pressure: 1010 + Math.floor(Math.random() * 20), // 1010-1030
-      visibility: 8 + Math.floor(Math.random() * 5), // 8-12 km
-      sunrise: "6:15 AM",
-      sunset: "6:45 PM",
-      hourlyForecast: generateHourlyForecast(baseTemp, '116') // Use partly cloudy code
-    };
-    
-    setWeatherData(mockData);
-    setWeatherError(null);
+  // Function to handle weather service unavailable
+  const handleWeatherServiceUnavailable = (errorMessage: string) => {
+    console.log('Weather service unavailable:', errorMessage);
+    setWeatherError('Weather service unavailable');
+    setWeatherData(null);
     setWeatherLoading(false);
   };
 
@@ -532,6 +549,9 @@ export default function HomeScreen() {
 
       setWeatherData(transformedData);
       setWeatherError(null);
+      
+      // Trigger animations when data loads successfully
+      startWeatherAnimations();
     } catch (error) {
       console.error('Error fetching weather data:', error);
       console.log('Falling back to free weather service...');
@@ -567,6 +587,9 @@ export default function HomeScreen() {
     const initializeWeather = async () => {
       console.log('Initializing weather...');
       
+      // Start pulse animation for loading state
+      startPulseAnimation();
+      
       // Get user's accurate location
       const currentLocation = await requestLocationPermission();
       console.log('Location result:', currentLocation);
@@ -578,37 +601,16 @@ export default function HomeScreen() {
           currentLocation.coords.longitude
         );
       } else {
-        console.log('Location permission denied, using fallback weather data');
+        console.log('Location permission denied, showing service unavailable');
+        setWeatherError('Location permission denied');
         setWeatherLoading(false);
-        // Don't fetch weather data if location is denied - just show fallback
       }
     };
 
     initializeWeather();
   }, []);
 
-  // Fallback weather data for when API fails or is loading
-  const fallbackWeatherData = {
-    location: t('weather.location'),
-    temperature: 28,
-    condition: t('weather.cloudy'),
-    icon: "cloudy",
-    humidity: 65,
-    windSpeed: 12,
-    feelsLike: 32,
-    uvIndex: 6,
-    visibility: 10,
-    pressure: 1013,
-    sunrise: "6:15 AM",
-    sunset: "6:45 PM",
-    hourlyForecast: [
-      { time: "Now", temp: 28, icon: "cloudy" },
-      { time: "2 PM", temp: 30, icon: "cloudy" },
-      { time: "4 PM", temp: 32, icon: "cloudy" },
-      { time: "6 PM", temp: 29, icon: "cloudy" },
-      { time: "8 PM", temp: 26, icon: "cloudy" },
-    ]
-  };
+
 
   // Function to get weather icon
   const getWeatherIcon = (iconType: string, size = 24, color = "#4DD0E1") => {
@@ -775,45 +777,54 @@ export default function HomeScreen() {
               </View>
               
               {weatherLoading ? (
-                <View style={[styles.weatherMain, { justifyContent: 'center', alignItems: 'center', minHeight: vs(60) }]}>
+                <Animated.View style={[
+                  styles.weatherMain, 
+                  { 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    minHeight: vs(60),
+                    transform: [{ scale: pulseAnim }]
+                  }
+                ]}>
                   <ActivityIndicator size="large" color="#FFFFFF" />
                   <Text style={[styles.weatherLocation, { marginTop: vs(8) }]}>
                     {t('features.loadingWeather') || 'Loading weather...'}
                   </Text>
-                </View>
+                </Animated.View>
               ) : weatherError ? (
-                <View style={styles.weatherMain}>
-                  <View style={styles.weatherTempSection}>
-                    <Text style={styles.weatherTemperature}>{fallbackWeatherData.temperature}°C</Text>
-                    <Text style={styles.weatherLocation}>
+                <View style={[styles.weatherMain, { justifyContent: 'center', alignItems: 'center', minHeight: vs(80) }]}>
+                  <View style={styles.serviceUnavailableContainer}>
+                    <CloudOff size={s(32)} color="rgba(255, 255, 255, 0.7)" />
+                    <Text style={styles.serviceUnavailableTitle}>
                       {locationPermission === 'denied' 
                         ? (t('features.locationDenied') || 'Location access denied')
-                        : (t('features.weatherUnavailable') || 'Weather unavailable')
+                        : 'Weather service unavailable'
+                      }
+                    </Text>
+                    <Text style={styles.serviceUnavailableSubtitle}>
+                      {locationPermission === 'denied' 
+                        ? 'Enable location to view weather'
+                        : 'Please try again later'
                       }
                     </Text>
                   </View>
-                  
-                  <View style={styles.weatherConditionSection}>
-                    {getWeatherIcon(fallbackWeatherData.icon, s(isVerySmallDevice ? 28 : 32), "#FFFFFF")}
-                    <Text style={styles.weatherCondition}>{fallbackWeatherData.condition}</Text>
-                  </View>
                 </View>
-              ) : (
-                <View>
+              ) : weatherData ? (
+                <Animated.View style={{ opacity: fadeAnim }}>
                   <View style={styles.weatherMain}>
                     <View style={styles.weatherTempSection}>
-                      <Text style={styles.weatherTemperature}>{weatherData?.temperature || fallbackWeatherData.temperature}°C</Text>
-                      <Text style={styles.weatherLocation}>{weatherData?.location || fallbackWeatherData.location}</Text>
+                      <Text style={styles.weatherTemperature}>{weatherData.temperature}°C</Text>
+                      <Text style={styles.weatherLocation}>{weatherData.location}</Text>
                     </View>
                     
                     <View style={styles.weatherConditionSection}>
                       {getWeatherIcon(
-                        weatherData?.icon || fallbackWeatherData.icon, 
+                        weatherData.icon, 
                         s(isVerySmallDevice ? 28 : 32), 
                         "#FFFFFF"
                       )}
                       <Text style={styles.weatherCondition}>
-                        {weatherData?.condition || fallbackWeatherData.condition}
+                        {weatherData.condition}
                       </Text>
                     </View>
                   </View>
@@ -825,14 +836,36 @@ export default function HomeScreen() {
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.hourlyForecastScroll}
                     >
-                      {(weatherData?.hourlyForecast || fallbackWeatherData.hourlyForecast).map((hour, index) => (
-                        <View key={index} style={styles.hourlyForecastItem}>
+                      {weatherData.hourlyForecast.map((hour, index) => (
+                        <Animated.View 
+                          key={index} 
+                          style={[
+                            styles.hourlyForecastItem,
+                            {
+                              opacity: slideAnim,
+                              transform: [{
+                                translateY: slideAnim.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: [20, 0]
+                                })
+                              }]
+                            }
+                          ]}
+                        >
                           <Text style={styles.hourlyTime}>{hour.time}</Text>
                           {getWeatherIcon(hour.icon, s(20), "#FFFFFF")}
                           <Text style={styles.hourlyTemp}>{hour.temp}°</Text>
-                        </View>
+                        </Animated.View>
                       ))}
                     </ScrollView>
+                  </View>
+                </Animated.View>
+              ) : (
+                <View style={[styles.weatherMain, { justifyContent: 'center', alignItems: 'center', minHeight: vs(80) }]}>
+                  <View style={styles.serviceUnavailableContainer}>
+                    <CloudOff size={s(32)} color="rgba(255, 255, 255, 0.7)" />
+                    <Text style={styles.serviceUnavailableTitle}>No weather data</Text>
+                    <Text style={styles.serviceUnavailableSubtitle}>Unable to load weather information</Text>
                   </View>
                 </View>
               )}
@@ -1265,6 +1298,26 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     marginTop: vs(6),
+  },
+
+  // Service Unavailable Styles
+  serviceUnavailableContainer: {
+    alignItems: 'center',
+    paddingVertical: vs(16),
+  },
+  serviceUnavailableTitle: {
+    fontSize: fontSize.medium,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: vs(12),
+    marginBottom: vs(4),
+  },
+  serviceUnavailableSubtitle: {
+    fontSize: fontSize.small,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '400',
+    textAlign: 'center',
   },
 
   // Quick Actions Styles
