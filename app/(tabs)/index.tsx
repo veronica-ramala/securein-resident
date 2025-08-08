@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Shield, Users, Clock, CircleCheck as CheckCircle, TriangleAlert as AlertTriangle, UserPlus, ShieldAlert, Key, Store, Building, MapPin, Sun, Cloud, CloudRain, Thermometer, Droplets, Wind, Heart, Bell } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,6 +6,9 @@ import Svg, { Path, Rect, Circle, Ellipse } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useLocalization } from '../../context/LocalizationContext';
 import { wp, hp, fontSize, spacing, s, vs, ms, RF, getResponsiveText, getLineHeight, isVerySmallDevice, isSmallDevice } from '../../utils/responsive';
+import { useEffect, useState } from 'react';
+import * as Location from 'expo-location';
+import Constants from 'expo-constants';
 
 // Custom Community Gate Icon Component
 const CommunityGateIcon = ({ size = 24, color = 'currentColor', ...props }) => {
@@ -109,6 +112,13 @@ const CommunityMapIcon = ({ size = 24, color = 'currentColor', ...props }) => {
 export default function HomeScreen() {
   const router = useRouter();
   const { t, currentLanguage } = useLocalization();
+
+  // Weather-related state
+  const [weatherData, setWeatherData] = useState<any>(null);
+  const [location, setLocation] = useState<any>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [locationPermission, setLocationPermission] = useState<string | null>(null);
 
   // Function to get appropriate greeting based on time of day
   const getGreeting = () => {
@@ -251,7 +261,7 @@ export default function HomeScreen() {
     const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
     
     // Get quotes for current language, fallback to English if language not available
-    const currentLanguageQuotes = motivationalQuotes[currentLanguage] || motivationalQuotes['en'];
+    const currentLanguageQuotes = motivationalQuotes[currentLanguage as keyof typeof motivationalQuotes] || motivationalQuotes['en'];
     
     return currentLanguageQuotes[dayOfYear % currentLanguageQuotes.length];
   };
@@ -259,8 +269,326 @@ export default function HomeScreen() {
   // Get today's quote (will update when language changes)
   const todaysQuote = getQuoteOfTheDay();
 
-  // Static weather data - Always showing Cloudy condition
-  const weatherData = {
+  // Function to request location permission and get current location
+  const requestLocationPermission = async () => {
+    try {
+      console.log('Requesting location permission...');
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log('Location permission status:', status);
+      setLocationPermission(status);
+      
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+        setWeatherError('Location permission denied');
+        setWeatherLoading(false);
+        return null;
+      }
+
+      console.log('Getting current position with high accuracy...');
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 15000, // 15 seconds timeout
+        maximumAge: 10000, // Accept cached location up to 10 seconds old
+      });
+      console.log('Current location obtained:', currentLocation.coords);
+      
+      setLocation(currentLocation);
+      return currentLocation;
+    } catch (error) {
+      console.error('Error getting location:', error);
+      setWeatherError('Failed to get location');
+      setWeatherLoading(false);
+      return null;
+    }
+  };
+
+  // Function to fetch weather data from a free weather service
+  const fetchFreeWeatherData = async (latitude: number, longitude: number) => {
+    try {
+      console.log('Trying free weather service...');
+      // Using wttr.in - a free weather service
+      const url = `https://wttr.in/${latitude},${longitude}?format=j1`;
+      console.log('Fetching from wttr.in:', url);
+      
+      const response = await fetch(url);
+      console.log('Free weather response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error('Free weather service failed');
+      }
+      
+      const data = await response.json();
+      console.log('Free weather data:', data);
+      
+      const current = data.current_condition?.[0];
+      const location = data.nearest_area?.[0];
+      
+      if (current) {
+        const transformedData = {
+          location: location?.areaName?.[0]?.value || location?.region?.[0]?.value || 'Unknown Location',
+          temperature: parseInt(current.temp_C) || 25,
+          condition: current.weatherDesc?.[0]?.value || 'Clear',
+          icon: mapFreeWeatherIconToLocal(current.weatherCode || '113'),
+          humidity: parseInt(current.humidity) || 60,
+          windSpeed: Math.round(parseFloat(current.windspeedKmph) || 10),
+          feelsLike: parseInt(current.FeelsLikeC) || parseInt(current.temp_C) || 25,
+          pressure: parseInt(current.pressure) || 1013,
+          visibility: parseInt(current.visibility) || 10,
+          sunrise: "6:15 AM", // wttr.in doesn't provide sunrise/sunset in this format
+          sunset: "6:45 PM",
+          hourlyForecast: generateHourlyForecast(parseInt(current.temp_C) || 25, current.weatherCode || '113')
+        };
+        
+        setWeatherData(transformedData);
+        setWeatherError(null);
+        setWeatherLoading(false);
+        return;
+      }
+      
+      throw new Error('Invalid weather data received');
+      
+    } catch (error) {
+      console.error('Free weather service failed:', error);
+      // If free service also fails, use location-based mock data
+      await generateMockWeatherData(latitude, longitude);
+    }
+  };
+
+  // Helper function to generate hourly forecast
+  const generateHourlyForecast = (baseTemp: number, weatherCode: string) => {
+    const currentHour = new Date().getHours();
+    const forecast = [];
+    
+    for (let i = 0; i < 5; i++) {
+      const hour = (currentHour + i) % 24;
+      const tempVariation = Math.floor(Math.random() * 4) - 2; // ±2 degrees
+      forecast.push({
+        time: i === 0 ? "Now" : `${hour.toString().padStart(2, '0')}:00`,
+        temp: baseTemp + tempVariation,
+        icon: mapFreeWeatherIconToLocal(weatherCode)
+      });
+    }
+    
+    return forecast;
+  };
+
+  // Function to generate mock weather data based on location
+  const generateMockWeatherData = async (latitude: number, longitude: number) => {
+    console.log('Generating mock weather data for coordinates:', latitude, longitude);
+    
+    // Simple logic to generate realistic weather based on location
+    let locationName = 'Unknown Location';
+    let baseTemp = 25;
+    
+    // Rough location detection based on coordinates
+    if (latitude >= 8 && latitude <= 37 && longitude >= 68 && longitude <= 97) {
+      // India region
+      locationName = 'India';
+      baseTemp = 28;
+    } else if (latitude >= 40 && latitude <= 41 && longitude >= -74 && longitude <= -73) {
+      // New York area
+      locationName = 'New York';
+      baseTemp = 20;
+    }
+    
+    const mockData = {
+      location: locationName,
+      temperature: baseTemp + Math.floor(Math.random() * 10) - 5, // ±5 degrees variation
+      condition: 'Partly Cloudy',
+      icon: 'partly-cloudy',
+      humidity: 60 + Math.floor(Math.random() * 20), // 60-80%
+      windSpeed: 5 + Math.floor(Math.random() * 15), // 5-20 km/h
+      feelsLike: baseTemp + Math.floor(Math.random() * 6) - 3,
+      pressure: 1010 + Math.floor(Math.random() * 20), // 1010-1030
+      visibility: 8 + Math.floor(Math.random() * 5), // 8-12 km
+      sunrise: "6:15 AM",
+      sunset: "6:45 PM",
+      hourlyForecast: generateHourlyForecast(baseTemp, '116') // Use partly cloudy code
+    };
+    
+    setWeatherData(mockData);
+    setWeatherError(null);
+    setWeatherLoading(false);
+  };
+
+  // Function to map wttr.in weather codes to local icons
+  const mapFreeWeatherIconToLocal = (weatherCode: string) => {
+    const code = weatherCode || '113';
+    
+    // wttr.in weather codes
+    if (['113'].includes(code)) return 'sunny'; // Clear/Sunny
+    if (['116', '119', '122'].includes(code)) return 'partly-cloudy'; // Partly cloudy
+    if (['143', '248', '260'].includes(code)) return 'cloudy'; // Cloudy/Overcast/Mist
+    if (['176', '179', '182', '185', '263', '266', '281', '284', '293', '296', '299', '302', '305', '308', '311', '314', '317', '320', '323', '326', '329', '332', '335', '338', '350', '353', '356', '359', '362', '365', '368', '371', '374', '377', '386', '389', '392', '395'].includes(code)) return 'rainy'; // Various rain/drizzle/thunderstorm conditions
+    
+    return 'cloudy'; // Default
+  };
+
+  // Function to fetch weather data and forecast from Indian Weather API
+  const fetchWeatherData = async (latitude: number, longitude: number) => {
+    try {
+      const apiKey = Constants.expoConfig?.extra?.indianWeatherApiKey;
+      console.log('Indian Weather API Key available:', !!apiKey);
+      console.log('API Key value:', apiKey ? `${apiKey.substring(0, 8)}...` : 'null');
+      
+      if (!apiKey || apiKey === 'YOUR_INDIAN_WEATHER_API_KEY_HERE') {
+        console.log('Indian Weather API key not configured, trying free weather service...');
+        await fetchFreeWeatherData(latitude, longitude);
+        return;
+      }
+
+      // Fetch both current weather and forecast
+      const currentUrl = `https://weather.indianapi.in/global/current?lat=${latitude}&lon=${longitude}`;
+      const forecastUrl = `https://weather.indianapi.in/global/forecast?lat=${latitude}&lon=${longitude}`;
+      
+      console.log('Fetching current weather from:', currentUrl);
+      console.log('Fetching forecast from:', forecastUrl);
+      
+      const headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      };
+
+      // Fetch current weather and forecast in parallel
+      const [currentResponse, forecastResponse] = await Promise.all([
+        fetch(currentUrl, { method: 'GET', headers }),
+        fetch(forecastUrl, { method: 'GET', headers })
+      ]);
+      
+      console.log('Current weather response status:', currentResponse.status);
+      console.log('Forecast response status:', forecastResponse.status);
+      
+      const currentData = await currentResponse.json();
+      console.log('Current weather data:', currentData);
+      
+      let forecastData = null;
+      if (forecastResponse.ok) {
+        forecastData = await forecastResponse.json();
+        console.log('Forecast data:', forecastData);
+      } else {
+        console.log('Forecast fetch failed, using current data only');
+      }
+      
+      if (!currentResponse.ok) {
+        throw new Error(currentData.detail || currentData.message || 'Failed to fetch weather data');
+      }
+
+      // Transform current weather data
+      const current = currentData.current || currentData;
+      const location = currentData.location || {};
+      
+      // Generate hourly forecast from forecast data or create mock data
+      let hourlyForecast = [];
+      if (forecastData && forecastData.forecast) {
+        // Use actual forecast data
+        const todayForecast = forecastData.forecast.forecastday?.[0]?.hour || [];
+        const currentHour = new Date().getHours();
+        
+        // Get next 5 hours of forecast
+        for (let i = 0; i < 5; i++) {
+          const hourIndex = (currentHour + i) % 24;
+          const hourData = todayForecast[hourIndex];
+          
+          if (hourData) {
+            hourlyForecast.push({
+              time: i === 0 ? "Now" : `${hourIndex}:00`,
+              temp: Math.round(hourData.temp_c || hourData.temperature || current.temperature || 25),
+              icon: mapIndianWeatherIconToLocal(hourData.condition?.text || hourData.weather_condition || current.weather_condition || 'clear')
+            });
+          }
+        }
+      }
+      
+      // If no forecast data, create simple hourly progression
+      if (hourlyForecast.length === 0) {
+        const baseTemp = Math.round(current.temperature || current.temp_c || 25);
+        const currentHour = new Date().getHours();
+        
+        for (let i = 0; i < 5; i++) {
+          const hour = (currentHour + i) % 24;
+          const tempVariation = Math.floor(Math.random() * 4) - 2; // ±2 degrees
+          hourlyForecast.push({
+            time: i === 0 ? "Now" : `${hour}:00`,
+            temp: baseTemp + tempVariation,
+            icon: mapIndianWeatherIconToLocal(current.weather_condition || current.condition?.text || 'clear')
+          });
+        }
+      }
+
+      const transformedData = {
+        location: location.name || location.city || currentData.name || 'Current Location',
+        temperature: Math.round(current.temperature || current.temp_c || 25),
+        condition: current.description || current.condition?.text || current.weather_condition || 'Clear',
+        icon: mapIndianWeatherIconToLocal(current.weather_condition || current.condition?.text || 'clear'),
+        humidity: current.humidity || 60,
+        windSpeed: Math.round(current.wind_speed || current.wind_kph || 10),
+        feelsLike: Math.round(current.feels_like || current.feelslike_c || current.temperature || current.temp_c || 25),
+        pressure: current.pressure || current.pressure_mb || 1013,
+        visibility: current.visibility || current.vis_km || 10,
+        sunrise: current.sunrise || "6:15 AM",
+        sunset: current.sunset || "6:45 PM",
+        hourlyForecast: hourlyForecast
+      };
+
+      setWeatherData(transformedData);
+      setWeatherError(null);
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+      console.log('Falling back to free weather service...');
+      await fetchFreeWeatherData(latitude, longitude);
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
+  // Function to map Indian Weather API conditions to local icon types
+  const mapIndianWeatherIconToLocal = (weatherCondition: string) => {
+    const condition = weatherCondition?.toLowerCase() || '';
+    
+    if (condition.includes('clear') || condition.includes('sunny')) {
+      return 'sunny';
+    } else if (condition.includes('partly') || condition.includes('few clouds')) {
+      return 'partly-cloudy';
+    } else if (condition.includes('cloud') || condition.includes('overcast')) {
+      return 'cloudy';
+    } else if (condition.includes('rain') || condition.includes('drizzle') || condition.includes('shower')) {
+      return 'rainy';
+    } else if (condition.includes('thunder') || condition.includes('storm')) {
+      return 'rainy';
+    } else {
+      return 'cloudy'; // Default fallback
+    }
+  };
+
+
+
+  // useEffect to initialize location and weather data
+  useEffect(() => {
+    const initializeWeather = async () => {
+      console.log('Initializing weather...');
+      
+      // Get user's accurate location
+      const currentLocation = await requestLocationPermission();
+      console.log('Location result:', currentLocation);
+      
+      if (currentLocation) {
+        console.log('Fetching weather for accurate coordinates:', currentLocation.coords.latitude, currentLocation.coords.longitude);
+        await fetchWeatherData(
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude
+        );
+      } else {
+        console.log('Location permission denied, using fallback weather data');
+        setWeatherLoading(false);
+        // Don't fetch weather data if location is denied - just show fallback
+      }
+    };
+
+    initializeWeather();
+  }, []);
+
+  // Fallback weather data for when API fails or is loading
+  const fallbackWeatherData = {
     location: t('weather.location'),
     temperature: 28,
     condition: t('weather.cloudy'),
@@ -283,7 +611,7 @@ export default function HomeScreen() {
   };
 
   // Function to get weather icon
-  const getWeatherIcon = (iconType, size = 24, color = "#4DD0E1") => {
+  const getWeatherIcon = (iconType: string, size = 24, color = "#4DD0E1") => {
     switch (iconType) {
       case "sunny":
         return <Sun size={size} color={color} />;
@@ -441,19 +769,73 @@ export default function HomeScreen() {
               <View style={styles.weatherHeader}>
                 <Thermometer size={s(16)} color="#FFFFFF" />
                 <Text style={styles.weatherTitle}>{t('features.weatherReport')}</Text>
+                {weatherLoading && (
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginLeft: s(8) }} />
+                )}
               </View>
               
-              <View style={styles.weatherMain}>
-                <View style={styles.weatherTempSection}>
-                  <Text style={styles.weatherTemperature}>{weatherData.temperature}°C</Text>
-                  <Text style={styles.weatherLocation}>{weatherData.location}</Text>
+              {weatherLoading ? (
+                <View style={[styles.weatherMain, { justifyContent: 'center', alignItems: 'center', minHeight: vs(60) }]}>
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+                  <Text style={[styles.weatherLocation, { marginTop: vs(8) }]}>
+                    {t('features.loadingWeather') || 'Loading weather...'}
+                  </Text>
                 </View>
-                
-                <View style={styles.weatherConditionSection}>
-                  {getWeatherIcon(weatherData.icon, s(isVerySmallDevice ? 28 : 32), "#FFFFFF")}
-                  <Text style={styles.weatherCondition}>{weatherData.condition}</Text>
+              ) : weatherError ? (
+                <View style={styles.weatherMain}>
+                  <View style={styles.weatherTempSection}>
+                    <Text style={styles.weatherTemperature}>{fallbackWeatherData.temperature}°C</Text>
+                    <Text style={styles.weatherLocation}>
+                      {locationPermission === 'denied' 
+                        ? (t('features.locationDenied') || 'Location access denied')
+                        : (t('features.weatherUnavailable') || 'Weather unavailable')
+                      }
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.weatherConditionSection}>
+                    {getWeatherIcon(fallbackWeatherData.icon, s(isVerySmallDevice ? 28 : 32), "#FFFFFF")}
+                    <Text style={styles.weatherCondition}>{fallbackWeatherData.condition}</Text>
+                  </View>
                 </View>
-              </View>
+              ) : (
+                <View>
+                  <View style={styles.weatherMain}>
+                    <View style={styles.weatherTempSection}>
+                      <Text style={styles.weatherTemperature}>{weatherData?.temperature || fallbackWeatherData.temperature}°C</Text>
+                      <Text style={styles.weatherLocation}>{weatherData?.location || fallbackWeatherData.location}</Text>
+                    </View>
+                    
+                    <View style={styles.weatherConditionSection}>
+                      {getWeatherIcon(
+                        weatherData?.icon || fallbackWeatherData.icon, 
+                        s(isVerySmallDevice ? 28 : 32), 
+                        "#FFFFFF"
+                      )}
+                      <Text style={styles.weatherCondition}>
+                        {weatherData?.condition || fallbackWeatherData.condition}
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  {/* Hourly Forecast */}
+                  <View style={styles.hourlyForecastContainer}>
+                    <ScrollView 
+                      horizontal 
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.hourlyForecastScroll}
+                    >
+                      {(weatherData?.hourlyForecast || fallbackWeatherData.hourlyForecast).map((hour, index) => (
+                        <View key={index} style={styles.hourlyForecastItem}>
+                          <Text style={styles.hourlyTime}>{hour.time}</Text>
+                          {getWeatherIcon(hour.icon, s(20), "#FFFFFF")}
+                          <Text style={styles.hourlyTemp}>{hour.temp}°</Text>
+                        </View>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </View>
+              )}
             </View>
           </LinearGradient>
         </View>
@@ -855,6 +1237,34 @@ const styles = StyleSheet.create({
     gap: s(4),
     flex: 1,
     justifyContent: 'flex-start',
+  },
+
+  // Hourly Forecast Styles
+  hourlyForecastContainer: {
+    marginTop: vs(16),
+    paddingTop: vs(12),
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  hourlyForecastScroll: {
+    paddingHorizontal: s(4),
+  },
+  hourlyForecastItem: {
+    alignItems: 'center',
+    marginHorizontal: s(8),
+    minWidth: s(50),
+  },
+  hourlyTime: {
+    fontSize: fontSize.tiny,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '500',
+    marginBottom: vs(6),
+  },
+  hourlyTemp: {
+    fontSize: fontSize.small,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginTop: vs(6),
   },
 
   // Quick Actions Styles
