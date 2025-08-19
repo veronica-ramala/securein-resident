@@ -41,7 +41,7 @@ async function testInsert() {
       pass_type: 'vip',
       status: 'active',
       visit_date: '2025-07-18',
-      visit_time: '12:00:00',
+      visit_time: new Date().toISOString(),
       visit_end_date: '2025-07-18',
       expiry_time: new Date().toISOString(),
       created_at: new Date().toISOString(),
