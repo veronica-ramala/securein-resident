@@ -10,7 +10,7 @@ import { getWeatherNotificationMessage, mapWeatherConditionToNotificationKey } f
 import { useEffect, useState, useRef } from 'react';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
-
+import WeatherCard from './weather-card';
 // Custom Community Gate Icon Component
 const CommunityGateIcon = ({ size = 24, color = 'currentColor', ...props }) => {
   return (
@@ -1788,129 +1788,15 @@ export default function HomeScreen() {
       <ScrollView style={styles.modernContent} contentContainerStyle={styles.modernScrollContent} showsVerticalScrollIndicator={false}>
         {/* Enhanced Weather Card with Gradients */}
         <View style={styles.enhancedWeatherCard}>
-          {weatherLoading ? (
-            <LinearGradient
-              colors={['#E0F2FE', '#FFFFFF']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.enhancedWeatherGradient}
-            >
-              <View style={styles.enhancedWeatherHeader}>
-                <Text style={styles.enhancedWeatherTitle}>🌤️ Weather Today</Text>
-                <ActivityIndicator size="small" color="#4A90E2" />
-              </View>
-              <View style={styles.modernWeatherLoading}>
-                <ActivityIndicator size="large" color="#4A90E2" />
-                <Text style={styles.modernLoadingText}>Loading weather...</Text>
-              </View>
-            </LinearGradient>
-          ) : weatherError ? (
-            <LinearGradient
-              colors={['#F3F4F6', '#FFFFFF']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.enhancedWeatherGradient}
-            >
-              <View style={styles.enhancedWeatherHeader}>
-                <Text style={styles.enhancedWeatherTitle}>🌤️ Weather Today</Text>
-              </View>
-              <View style={styles.modernWeatherError}>
-                <CloudOff size={32} color="#9CA3AF" />
-                <Text style={styles.modernErrorTitle}>
-                  {locationPermission === 'denied' 
-                    ? 'Location access denied'
-                    : locationPermission === 'services_disabled'
-                    ? 'Location services disabled'
-                    : 'Weather service unavailable'
-                  }
-                </Text>
-                <Text style={styles.modernErrorSubtitle}>{weatherError}</Text>
-                <TouchableOpacity 
-                  style={styles.modernRetryButton}
-                  onPress={retryLocationAndWeather}
-                >
-                  <Text style={styles.modernRetryButtonText}>
-                    {locationPermission === 'services_disabled' ? 'Check Settings' : 'Try Again'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
-          ) : weatherData ? (
-            <LinearGradient
-              colors={getWeatherGradient(weatherData.icon).colors}
-              start={getWeatherGradient(weatherData.icon).start}
-              end={getWeatherGradient(weatherData.icon).end}
-              style={styles.enhancedWeatherGradient}
-            >
-              <View style={styles.enhancedWeatherHeader}>
-                <Text style={[
-                  styles.enhancedWeatherTitle,
-                  { color: getWeatherTextColor(weatherData.icon) }
-                ]}>
-                  🌤️ Weather Today
-                </Text>
-              </View>
-              
-              <View style={styles.enhancedWeatherContainer}>
-                {/* Weather particles background */}
-                <WeatherParticles weatherType={weatherData.icon} />
-                
-                <Animated.View style={[styles.modernWeatherContent, { opacity: fadeAnim }]}>
-                  <View style={styles.enhancedWeatherMain}>
-                    <View style={styles.enhancedTempSection}>
-                      <Text style={[
-                        styles.enhancedTemperature,
-                        { color: getWeatherTextColor(weatherData.icon) }
-                      ]}>
-                        {weatherData.temperature}°
-                      </Text>
-                    </View>
-                  <View style={styles.enhancedLocationInfo}>
-                    <Text style={[
-                      styles.enhancedLocation,
-                      { color: getWeatherTextColor(weatherData.icon) }
-                    ]}>
-                      {weatherData.location}
-                    </Text>
-                    <Text style={[
-                      styles.enhancedCondition,
-                      { color: getWeatherSubtextColor(weatherData.icon) }
-                    ]}>
-                      {weatherData.condition}
-                    </Text>
-                  </View>
-                </View>
-                <View style={[
-                  styles.enhancedWeatherStats,
-                  { backgroundColor: getWeatherStatsBackground(weatherData.icon) }
-                ]}>
-                  <Text style={[
-                    styles.enhancedStatsText,
-                    { color: getWeatherSubtextColor(weatherData.icon) }
-                  ]}>
-                    Feels like {weatherData.feelsLike}° • {weatherData.humidity}% humidity
-                  </Text>
-                </View>
-              </Animated.View>
-              </View>
-            </LinearGradient>
-          ) : (
-            <LinearGradient
-              colors={['#F3F4F6', '#FFFFFF']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.enhancedWeatherGradient}
-            >
-              <View style={styles.enhancedWeatherHeader}>
-                <Text style={styles.enhancedWeatherTitle}>🌤️ Weather Today</Text>
-              </View>
-              <View style={styles.modernWeatherError}>
-                <CloudOff size={32} color="#9CA3AF" />
-                <Text style={styles.modernErrorTitle}>No weather data</Text>
-                <Text style={styles.modernErrorSubtitle}>Unable to load weather information</Text>
-              </View>
-            </LinearGradient>
-          )}
+            <WeatherCard
+              loading={weatherLoading}
+              error={weatherError}
+              locationPermission={locationPermission}
+              onRetry={retryLocationAndWeather}
+              weatherData={weatherData}
+              userName="Veronica"
+            />
+         
         </View>
 
         

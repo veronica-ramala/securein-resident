@@ -17,7 +17,7 @@ function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: false, 
         tabBarActiveTintColor: '#1E88E5',
         tabBarInactiveTintColor: '#4DD0E1',
         tabBarStyle: {
@@ -144,6 +144,10 @@ function TabLayout() {
       />
       <Tabs.Screen
         name="notifications"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="weather-card"
         options={{ href: null }}
       />
       <Tabs.Screen
