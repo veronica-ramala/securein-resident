@@ -1,0 +1,356 @@
+{
+  "files": [
+    {
+      "path": "app\\(tabs)\\index.tsx",
+      "matches": [
+        {
+          "pattern": "wp\\(",
+          "count": 7,
+          "lines": [
+            680,
+            707,
+            778,
+            830,
+            890,
+            906,
+            922
+          ]
+        },
+        {
+          "pattern": "fontSize\\.",
+          "count": 31,
+          "lines": [
+            474,
+            484,
+            494,
+            561,
+            564,
+            567,
+            570,
+            600,
+            602,
+            605,
+            609,
+            639,
+            644,
+            654,
+            656,
+            665,
+            670,
+            700,
+            705,
+            736,
+            750,
+            753,
+            756,
+            766,
+            781,
+            789,
+            856,
+            939,
+            943
+          ]
+        },
+        {
+          "pattern": "spacing\\.",
+          "count": 8,
+          "lines": [
+            536,
+            613,
+            622,
+            626,
+            890,
+            906,
+            922
+          ]
+        },
+        {
+          "pattern": "isSmallDevice",
+          "count": 4,
+          "lines": [
+            8,
+            776,
+            778
+          ]
+        },
+        {
+          "pattern": "getResponsiveText",
+          "count": 6,
+          "lines": [
+            8,
+            474,
+            484,
+            494,
+            507,
+            517
+          ]
+        }
+      ],
+      "totalMatches": 56
+    },
+    {
+      "path": "app\\(tabs)\\index-responsive.tsx",
+      "matches": [
+        {
+          "pattern": "hp\\(",
+          "count": 5,
+          "lines": [
+            225,
+            297,
+            472,
+            542,
+            639
+          ]
+        },
+        {
+          "pattern": "fontSize\\.",
+          "count": 2,
+          "lines": [
+            246,
+            269
+          ]
+        },
+        {
+          "pattern": "spacing\\.",
+          "count": 25,
+          "lines": [
+            235,
+            245,
+            257,
+            289,
+            296,
+            312,
+            322,
+            332,
+            381,
+            447,
+            455,
+            462,
+            471,
+            473,
+            490,
+            511,
+            540,
+            614,
+            622,
+            629,
+            638,
+            640,
+            667
+          ]
+        }
+      ],
+      "totalMatches": 32
+    },
+    {
+      "path": "app\\(tabs)\\notifications.tsx",
+      "matches": [
+        {
+          "pattern": "fontSize\\.",
+          "count": 17,
+          "lines": [
+            257,
+            260,
+            272,
+            287,
+            291,
+            321,
+            325,
+            332,
+            336,
+            339,
+            341,
+            372,
+            375,
+            398,
+            400,
+            413,
+            415
+          ]
+        },
+        {
+          "pattern": "getResponsiveText",
+          "count": 1,
+          "lines": [
+            8
+          ]
+        }
+      ],
+      "totalMatches": 18
+    },
+    {
+      "path": "components\\ResponsiveDemo.tsx",
+      "matches": [
+        {
+          "pattern": "hp\\(",
+          "count": 2,
+          "lines": [
+            94,
+            171
+          ]
+        },
+        {
+          "pattern": "spacing\\.",
+          "count": 10,
+          "lines": [
+            68,
+            74,
+            83,
+            144,
+            150,
+            160,
+            170,
+            184,
+            208,
+            213
+          ]
+        }
+      ],
+      "totalMatches": 12
+    },
+    {
+      "path": "components\\ResponsiveText.tsx",
+      "matches": [
+        {
+          "pattern": "isSmallDevice",
+          "count": 7,
+          "lines": [
+            3,
+            29,
+            39,
+            50,
+            60
+          ]
+        },
+        {
+          "pattern": "getResponsiveText",
+          "count": 3,
+          "lines": [
+            3,
+            37,
+            48
+          ]
+        }
+      ],
+      "totalMatches": 10
+    },
+    {
+      "path": "components\\ResponsiveWrapper.tsx",
+      "matches": [
+        {
+          "pattern": "wp\\(",
+          "count": 1,
+          "lines": [
+            103
+          ]
+        },
+        {
+          "pattern": "hp\\(",
+          "count": 1,
+          "lines": [
+            104
+          ]
+        },
+        {
+          "pattern": "spacing\\.",
+          "count": 4,
+          "lines": [
+            105,
+            138,
+            169
+          ]
+        }
+      ],
+      "totalMatches": 6
+    },
+    {
+      "path": "app\\(tabs)\\_layout.tsx",
+      "matches": [
+        {
+          "pattern": "fontSize\\.",
+          "count": 2,
+          "lines": [
+            31,
+            35
+          ]
+        },
+        {
+          "pattern": "getResponsiveText",
+          "count": 1,
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "totalMatches": 3
+    },
+    {
+      "path": "app\\(tabs)\\community-map.tsx",
+      "matches": [
+        {
+          "pattern": "Dimensions\\.get",
+          "count": 1,
+          "lines": [
+            9
+          ]
+        }
+      ],
+      "totalMatches": 1
+    },
+    {
+      "path": "app\\(tabs)\\elder-monitoring.tsx",
+      "matches": [
+        {
+          "pattern": "getResponsiveText",
+          "count": 1,
+          "lines": [
+            8
+          ]
+        }
+      ],
+      "totalMatches": 1
+    },
+    {
+      "path": "app\\(tabs)\\facilities.tsx",
+      "matches": [
+        {
+          "pattern": "Dimensions\\.get",
+          "count": 1,
+          "lines": [
+            7
+          ]
+        }
+      ],
+      "totalMatches": 1
+    },
+    {
+      "path": "app\\flash-screen.tsx",
+      "matches": [
+        {
+          "pattern": "Dimensions\\.get",
+          "count": 1,
+          "lines": [
+            6
+          ]
+        }
+      ],
+      "totalMatches": 1
+    }
+  ],
+  "summary": {
+    "totalFiles": 33,
+    "filesWithResponsive": 11,
+    "patternCounts": {
+      "wp\\(": 8,
+      "hp\\(": 8,
+      "fontSize\\.": 52,
+      "spacing\\.": 47,
+      "isSmallDevice": 11,
+      "isLargeDevice": 0,
+      "getResponsiveText": 12,
+      "Dimensions\\.get": 3,
+      "SCREEN_WIDTH": 0,
+      "SCREEN_HEIGHT": 0
+    }
+  }
+}
